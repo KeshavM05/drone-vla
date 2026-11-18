@@ -64,6 +64,14 @@ docs/
 - Making an architecture decision → document rationale in `docs/architecture/`
 - Hitting a milestone → update `docs/milestones/`
 
+## Git Workflow
+- **Commit after every meaningful change.** Don't batch — commit as you go.
+- Use logical, atomic commits: one commit per feature, fix, or doc update.
+- Commit messages: short imperative subject, optional body explaining "why".
+- Always end commit messages with: `Co-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>`
+- Never commit `.env`, credentials, or model weights.
+- When both code and docs change together, separate into two commits (code first, then docs).
+
 ## Conventions
 - Python 3.10+, asyncio throughout
 - Pydantic v2 for all data schemas
