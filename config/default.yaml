@@ -1,0 +1,32 @@
+stt:
+  model_size: "base.en"
+  language: "en"
+  device: "auto"  # cpu, cuda, or auto
+  vad_filter: true
+  beam_size: 5
+
+llm:
+  provider: "bedrock"
+  region: "us-east-1"
+  model_id: "us.anthropic.claude-sonnet-4-20250514"
+  max_tokens: 2048
+  temperature: 0.0
+
+fleet:
+  max_drones: 5
+  default_altitude_m: 20.0
+  min_battery_pct: 20
+  failover_enabled: true
+  deconfliction_buffer_m: 5.0
+
+simulation:
+  sitl_instances: 3
+  start_port: 14540  # MAVSDK gRPC ports: 14540, 14541, 14542, ...
+  home_lat: 47.397742
+  home_lon: 8.545594
+  home_alt: 488.0
+
+ros2:
+  enabled: false
+  namespace: "/drone_vla"
+  qos_depth: 10

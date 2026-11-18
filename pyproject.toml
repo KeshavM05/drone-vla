@@ -1,0 +1,47 @@
+[build-system]
+requires = ["setuptools>=68.0", "setuptools-scm>=8.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "drone-vla"
+version = "0.1.0"
+description = "Natural Language Drone Swarm Command & Control"
+requires-python = ">=3.10"
+dependencies = [
+    "boto3>=1.34",
+    "faster-whisper>=1.0",
+    "mavsdk>=2.0",
+    "pydantic>=2.5",
+    "pyyaml>=6.0",
+    "numpy>=1.26",
+    "scipy>=1.12",
+    "sounddevice>=0.4",
+    "asyncio-mqtt>=0.16",
+]
+
+[project.optional-dependencies]
+ros2 = [
+    "rclpy",
+    "std_msgs",
+    "geometry_msgs",
+    "sensor_msgs",
+]
+dev = [
+    "pytest>=8.0",
+    "pytest-asyncio>=0.23",
+    "ruff>=0.2",
+]
+
+[project.scripts]
+drone-vla = "drone_vla.main:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]

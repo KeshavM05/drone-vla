@@ -1,0 +1,37 @@
+{
+  "mission_types": {
+    "area_search": {
+      "description": "Search a defined polygon area with coordinated sweep patterns",
+      "required_fields": ["search_polygon", "altitude_agl_m", "sensor_mode"],
+      "optional_fields": ["target_classes", "overlap_pct", "speed_ms"]
+    },
+    "perimeter_patrol": {
+      "description": "Establish and maintain a continuous patrol around a perimeter",
+      "required_fields": ["perimeter_polygon", "altitude_agl_m", "direction"],
+      "optional_fields": ["patrol_speed_ms", "loiter_time_s"]
+    },
+    "formation_flight": {
+      "description": "Fly in a specified formation pattern",
+      "required_fields": ["formation_type", "center_point", "altitude_agl_m"],
+      "optional_fields": ["spacing_m", "heading_deg", "orbit_radius_m"]
+    },
+    "point_inspection": {
+      "description": "Inspect a specific point of interest from multiple angles",
+      "required_fields": ["target_point", "altitude_agl_m"],
+      "optional_fields": ["orbit_radius_m", "camera_angles", "duration_s"]
+    },
+    "relay_station": {
+      "description": "Position drones as communication relay nodes",
+      "required_fields": ["station_points", "altitude_agl_m"],
+      "optional_fields": ["handoff_battery_pct"]
+    },
+    "return_to_home": {
+      "description": "Command drones to return to their launch positions",
+      "required_fields": [],
+      "optional_fields": ["landing_sequence", "altitude_agl_m"]
+    }
+  },
+  "formation_types": ["line", "triangle", "diamond", "circle", "v_shape", "grid"],
+  "sensor_modes": ["rgb", "thermal", "thermal_rgb_fused", "multispectral"],
+  "contingency_actions": ["auto_rth", "loiter_in_place", "land_immediately", "continue_mission"]
+}
