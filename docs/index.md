@@ -36,6 +36,8 @@ Module-level documentation and data contracts.
 - [Hardware Recommendations](./plan/hardware-recommendations.md) — 3-tier drone hardware options
 - [Week 1: Foundation](./plan/week-1-foundation.md) — SITL + Gazebo environment setup
 - [Weeks 2-3: Core Pipeline](./plan/week-2-3-core-pipeline.md) — NLP-to-flight integration
+- [Cost & Feasibility Analysis](./plan/cost-feasibility-analysis.md) — Full financial breakdown and scaling projections
+- [Hardware Feasibility](./plan/feasibility-analysis.md) — SpeedyBee F405 V4 purchase decision and ordering plan
 - [Daily Log](./plan/daily-log.md) — Accountability journal
 
 ### [Milestones](./milestones/phase-1-simulation.md)

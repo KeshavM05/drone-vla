@@ -10,25 +10,29 @@ tags:
 
 Three tiers for your 3-drone physical setup. All are ArduPilot-native, which means the same codebase works in [simulation and physical](./master-plan.md) with only a config change.
 
+## Chosen Build: SpeedyBee F405 V4 DIY
+
+> **Decision made.** Budget constraint of $500-600 means we go DIY with SpeedyBee F405 V4 stacks on 5" frames. Same ArduPilot firmware as Pixhawk, fraction of the price. Full purchase plan in [Hardware Feasibility](./feasibility-analysis.md). Full financial projections in [Cost & Feasibility Analysis](./cost-feasibility-analysis.md).
+
 ## Decision Matrix
 
-| Factor | Tier 1: Budget | Tier 2: Dev Kit (Rec.) | Tier 3: Pro |
-|--------|---------------|----------------------|-------------|
-| **Per-drone cost** | ~$300 | ~$450-550 | ~$700-900 |
-| **Total (3 drones)** | ~$900 | ~$1,350-1,650 | ~$2,100-2,700 |
-| **Flight controller** | Pixhawk 4 Mini | Pixhawk 6C | CubePilot Orange+ |
-| **Frame** | S500 generic | Holybro X500 V2 | Holybro X500 V2 |
-| **GPS** | M8N basic | M9N with compass | HERE3+ RTK-ready |
-| **Companion computer** | None | Raspberry Pi 4/5 | Jetson Orin Nano |
-| **Camera** | None | Pi Camera v3 | Pi Camera + Thermal |
-| **Telemetry** | 433MHz SiK radio | Wi-Fi (ESP32) | Wi-Fi + 4G fallback |
-| **Flight time** | ~15 min | ~18 min | ~20 min |
-| **Assembly difficulty** | Medium | Easy (dev kit) | Medium |
-| **Best for** | Proof of concept | Demo day / pitch | Sustained development |
+| Factor | **Chosen: DIY SpeedyBee** | Tier 2: Dev Kit | Tier 3: Pro |
+|--------|--------------------------|----------------------|-------------|
+| **Per-drone cost** | **~$155** | ~$450-550 | ~$700-900 |
+| **Total (3 drones)** | **~$465 + $116 shared** | ~$1,350-1,650 | ~$2,100-2,700 |
+| **Flight controller** | **SpeedyBee F405 V4** | Pixhawk 6C | CubePilot Orange+ |
+| **Frame** | **5" (Source One/Mark4)** | Holybro X500 V2 | Holybro X500 V2 |
+| **GPS** | **BN-880** | M9N with compass | HERE3+ RTK-ready |
+| **Companion computer** | **None (ground station)** | Raspberry Pi 4/5 | Jetson Orin Nano |
+| **Camera** | **None (sim for demo)** | Pi Camera v3 | Pi Camera + Thermal |
+| **Telemetry** | **ESP32 Wi-Fi** | Wi-Fi (ESP32) | Wi-Fi + 4G fallback |
+| **Flight time** | **~8-12 min (5")** | ~18 min | ~20 min |
+| **Assembly difficulty** | **High (full DIY solder)** | Easy (dev kit) | Medium |
+| **Best for** | **$600 budget demo** | Unlimited budget demo | Sustained development |
 
-## Recommended: Tier 2 (Holybro X500 V2 Dev Kit)
+## Reference: Tier 2 (Holybro X500 V2 Dev Kit)
 
-This is the ArduPilot reference development platform. It is what ArduPilot devs themselves use for testing, which means community support is excellent.
+This was the original recommendation before the $500-600 budget constraint. It remains the upgrade path if budget opens up (e.g., after funding). It is the ArduPilot reference development platform with excellent community support.
 
 ### Bill of Materials (per drone)
 
