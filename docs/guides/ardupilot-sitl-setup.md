@@ -47,24 +47,58 @@ For development without Docker:
 ### Install ArduPilot
 
 ```bash
+cd ~
 git clone --recurse-submodules https://github.com/ArduPilot/ardupilot.git
 cd ardupilot
 Tools/environment_install/install-prereqs-ubuntu.sh -y
 . ~/.profile
 ```
 
+### Add sim_vehicle.py to PATH
+
+```bash
+echo 'export PATH="$PATH:$HOME/ardupilot/Tools/autotest"' >> ~/.bashrc
+source ~/.bashrc
+```
+
+### Build SITL
+
+```bash
+cd ~/ardupilot
+./waf configure --board sitl
+./waf copter
+```
+
+### Run single instance (quickstart)
+
+```bash
+sim_vehicle.py -v ArduCopter --map --console
+```
+
 ### Run multi-instance SITL
 
 ```bash
+# Use the start_sitl.sh helper (Kingston, Ontario coordinates):
+./scripts/start_sitl.sh 3
+
+# Or manually:
 # Terminal 1: Instance 0
-sim_vehicle.py -v ArduCopter --instance 0 -l 47.397742,8.545594,488,0 --out=udp:127.0.0.1:14550
+sim_vehicle.py -v ArduCopter --instance 0 -l 44.225,-76.495,90,0 --no-mavproxy -w
 
 # Terminal 2: Instance 1
-sim_vehicle.py -v ArduCopter --instance 1 -l 47.397842,8.545694,488,0 --out=udp:127.0.0.1:14560
+sim_vehicle.py -v ArduCopter --instance 1 -l 44.2251,-76.495,90,0 --no-mavproxy -w
 
 # Terminal 3: Instance 2
-sim_vehicle.py -v ArduCopter --instance 2 -l 47.397942,8.545794,488,0 --out=udp:127.0.0.1:14570
+sim_vehicle.py -v ArduCopter --instance 2 -l 44.2252,-76.495,90,0 --no-mavproxy -w
 ```
+
+### Verify with MAVProxy
+
+```bash
+mavproxy.py --master=tcp:127.0.0.1:5760
+```
+
+You should see heartbeats, EKF initialization, and GPS fix within 30 seconds.
 
 ### Install Gazebo + ros_gz_bridge
 

@@ -37,3 +37,9 @@ models/
 *.bin
 *.pt
 *.onnx
+
+# ArduPilot SITL artifacts
+mav.parm
+mav.tlog
+mav.tlog.raw
+eeprom.bin
