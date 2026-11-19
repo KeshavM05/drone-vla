@@ -1,11 +1,13 @@
-"""Day 1: Connect to a single SITL instance — use this to validate SITL is working."""
+"""Day 2: Connect to SITL via MAVSDK, takeoff, fly a square, and land."""
 
 import asyncio
 from mavsdk import System
+from mavsdk.offboard import PositionNedYaw, OffboardError
 
 
 async def main():
     drone = System()
+
     print("Connecting to SITL on udp://:14550...")
     await drone.connect(system_address="udp://:14550")
 
@@ -28,27 +30,50 @@ async def main():
     print("Taking off to 20m...")
     await drone.action.set_takeoff_altitude(20.0)
     await drone.action.takeoff()
-
-    print("Climbing... (waiting 10s)")
     await asyncio.sleep(10)
 
-    async for position in drone.telemetry.position():
-        print(
-            f"Position — Alt: {position.relative_altitude_m:.1f}m "
-            f"Lat: {position.latitude_deg:.6f} Lon: {position.longitude_deg:.6f}"
-        )
+    async for pos in drone.telemetry.position():
+        print(f"Altitude: {pos.relative_altitude_m:.1f}m")
         break
 
-    async for battery in drone.telemetry.battery():
-        print(f"Battery — {battery.remaining_percent * 100:.0f}% ({battery.voltage_v:.1f}V)")
+    print("\n--- Flying a square pattern (NED offboard) ---")
+
+    await drone.offboard.set_position_ned(PositionNedYaw(0.0, 0.0, -20.0, 0.0))
+
+    try:
+        await drone.offboard.start()
+    except OffboardError as e:
+        print(f"Offboard start failed: {e}")
+        await drone.action.land()
+        return
+
+    waypoints = [
+        PositionNedYaw(20.0, 0.0, -20.0, 0.0),
+        PositionNedYaw(20.0, 20.0, -20.0, 90.0),
+        PositionNedYaw(0.0, 20.0, -20.0, 180.0),
+        PositionNedYaw(0.0, 0.0, -20.0, 270.0),
+    ]
+
+    for i, wp in enumerate(waypoints):
+        print(f"  Waypoint {i+1}: N={wp.north_m:.0f} E={wp.east_m:.0f} heading={wp.yaw_deg:.0f}")
+        await drone.offboard.set_position_ned(wp)
+        await asyncio.sleep(8)
+
+    print("Square complete!")
+
+    await drone.offboard.stop()
+
+    async for pos in drone.telemetry.position():
+        print(
+            f"Final position — Alt: {pos.relative_altitude_m:.1f}m "
+            f"Lat: {pos.latitude_deg:.6f} Lon: {pos.longitude_deg:.6f}"
+        )
         break
 
     print("Landing...")
     await drone.action.land()
-
-    print("Waiting for landing... (15s)")
     await asyncio.sleep(15)
-    print("Done! SITL connection validated.")
+    print("Done! MAVSDK control validated.")
 
 
 if __name__ == "__main__":
