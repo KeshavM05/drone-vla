@@ -33,5 +33,5 @@ For each session, add an entry at the top (newest first):
 **Actual:** Cloned ArduPilot, ran install-prereqs-ubuntu.sh, built ArduCopter SITL via waf, launched sim_vehicle.py, connected MAVProxy and confirmed heartbeats + EKF + GPS lock. Installed MAVSDK and MAVProxy pip packages. Set up fnm + Node 24 for OpenKnowledge.
 **Blocked by:** SSH key wasn't registered with GitHub (fixed). sudo password needed for prereqs installer (ran manually).
 **Decision:** Native SITL over Docker — simpler for dev, matches prod closer. ArduPilot over PX4 per prior decision (ros_gz_bridge support).
-**Next:** Set up Gazebo visualization with ardupilot_gazebo plugin. Then MAVSDK connect test script.
-**Hours:** 1.5h
+**Next:** MAVSDK connect test script. Multi-drone SITL instances.
+**Hours:** 2h

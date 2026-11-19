@@ -100,7 +100,47 @@ mavproxy.py --master=tcp:127.0.0.1:5760
 
 You should see heartbeats, EKF initialization, and GPS fix within 30 seconds.
 
-### Install Gazebo + ros_gz_bridge
+### Install Gazebo + ardupilot_gazebo plugin
+
+Gazebo Harmonic should already be installed. Build the ArduPilot plugin:
+
+```bash
+cd ~
+git clone https://github.com/ArduPilot/ardupilot_gazebo.git
+cd ardupilot_gazebo
+sudo apt-get install -y rapidjson-dev
+mkdir build && cd build
+cmake .. -DCMAKE_BUILD_TYPE=RelWithDebInfo
+make -j$(nproc)
+```
+
+Add to `~/.bashrc`:
+
+```bash
+export GZ_SIM_SYSTEM_PLUGIN_PATH=$HOME/ardupilot_gazebo/build:$GZ_SIM_SYSTEM_PLUGIN_PATH
+export GZ_SIM_RESOURCE_PATH=$HOME/ardupilot_gazebo/models:$HOME/ardupilot_gazebo/worlds:$GZ_SIM_RESOURCE_PATH
+```
+
+### Launch SITL with Gazebo (3D visualization)
+
+Two terminals required:
+
+```bash
+# Terminal 1: Gazebo
+gz sim -v4 -r iris_runway.sdf
+
+# Terminal 2: SITL (after Gazebo window appears)
+sim_vehicle.py -v ArduCopter -f gazebo-iris --model JSON --map --console
+```
+
+Fly from the MAVProxy prompt:
+```
+mode guided
+arm throttle
+takeoff 20
+```
+
+### Install ros_gz_bridge (optional, for ROS2 integration)
 
 For ROS2 Humble on Ubuntu 22.04:
 
