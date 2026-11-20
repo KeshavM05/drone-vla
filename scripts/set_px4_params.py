@@ -10,16 +10,17 @@ PARAMS = {
     "NAV_DLL_ACT": 0,
     "CBRK_SUPPLY_CHK": 894281,
     "SYS_HAS_MAG": 0,
+    "COM_ARM_WO_GPS": 1,
     "SDLOG_MODE": -1,
 }
 
 
 def int_as_float(val):
-    return struct.unpack("f", struct.pack("I", int(val)))[0]
+    return struct.unpack("f", struct.pack("i", int(val)))[0]
 
 
 def float_as_int(val):
-    return struct.unpack("I", struct.pack("f", val))[0]
+    return struct.unpack("i", struct.pack("f", val))[0]
 
 
 def set_params(port, drone_id):
