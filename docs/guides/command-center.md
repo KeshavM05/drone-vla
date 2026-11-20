@@ -13,10 +13,23 @@ Web-based mission control dashboard for operating the drone swarm.
 ## Quick Start
 
 ```bash
+# Simulated mode (no PX4 needed — for UI development)
 python3 ~/drone-vla/scripts/start_command_center.py
+
+# Live mode (requires PX4 SITL + MicroXRCE-DDS running)
+python3 ~/drone-vla/scripts/start_command_center.py --live
 ```
 
 Open **http://localhost:8080** in a browser.
+
+### Modes
+
+| Mode | Flag | What happens |
+|------|------|--------------|
+| Simulated | (default) | Fake telemetry, NLP parses but doesn't execute |
+| Live | `--live` | ROS2 SwarmManager connects to PX4, commands execute end-to-end |
+
+Additional flags: `--drones N` (default 3), `--port P` (default 8080).
 
 ## Features
 
@@ -57,6 +70,11 @@ Two input modes:
 
 Commands are parsed by Claude Haiku 4.5 via AWS Bedrock into structured `MissionCommand` JSON. The parser extracts mission type, drone assignments, altitude, formation, and parameters.
 
+In **live mode**, parsed commands execute immediately:
+- **LAND / RTH / TAKEOFF** → sent directly to SwarmManager
+- **Formation, search, patrol, orbit** → routed through MissionExecutor → PathPlanner → SwarmManager GPS waypoints
+- FleetManager tracks drone allocation and syncs telemetry from PX4 on every tick
+
 Example commands:
 - `send all drones to search the north field at 25 meters`
 - `drone 2 orbit the building at 30 meters`
@@ -67,14 +85,20 @@ Example commands:
 
 ```mermaid
 flowchart LR
-    Browser[Browser UI] <-->|WebSocket 2Hz| FastAPI[FastAPI Backend]
-    FastAPI --> Bedrock[Claude Haiku via Bedrock]
-    FastAPI --> Swarm[SwarmManager ROS2 Node]
+    Browser[Browser UI] <-->|WebSocket 2Hz| Bridge[SwarmBridge]
+    Bridge --> NLP[Claude Haiku via Bedrock]
+    NLP --> Bridge
+    Bridge --> Exec[MissionExecutor]
+    Exec --> Fleet[FleetManager]
+    Exec --> Plan[PathPlanner]
+    Plan --> Exec
+    Exec --> Swarm[SwarmManager]
     Swarm --> PX4[PX4 Drones]
     Swarm --> CA[Collision Avoidance]
+    Swarm -->|telemetry| Fleet
 ```
 
-The backend serves simulated telemetry when PX4 is not running, so the UI works for development without launching the simulator.
+The `SwarmBridge` in `app.py` holds references to all pipeline components. In simulated mode it serves fake telemetry and parses commands without executing. In live mode (`--live`), it wires NLP → MissionExecutor → SwarmManager for full end-to-end command execution.
 
 ## API Endpoints
 

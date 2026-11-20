@@ -8,15 +8,17 @@ tags:
 ---
 # Current System Status
 
-Last updated: 2026-11-20 (Day 3)
+Last updated: 2026-11-20 (Day 3, evening)
 
 ## Recent Changes
 
-- Flattened `src/drone_vla/` → `drone_vla/` at project root (one less nesting level)
-- Nuked all ArduPilot/MAVSDK code (14 files deleted, 9 dead scripts removed)
-- `px4_msgs` source tracked in `ros2_ws/src/` — project is fully self-contained
-- Config path bug fixed (`parents[2]` → `parents[1]` after flatten)
-- All 11 component tests passing (imports, config, geo, CA, fleet, path planner, NLP, web)
+- **End-to-end command pipeline wired** — NLP → FleetManager → MissionExecutor → SwarmManager
+- `start_command_center.py --live` mode connects ROS2 SwarmManager with full execution
+- LAND/RTH/TAKEOFF dispatch directly to SwarmManager; complex missions route through PathPlanner
+- FleetManager syncs telemetry from PX4 on every tick for allocation decisions
+- `altitude_agl_m` validation fixed (`ge=1.0` → `ge=0.0`) for land commands
+- Flattened `src/drone_vla/` → `drone_vla/` at project root
+- Nuked all ArduPilot/MAVSDK code, project fully self-contained with px4_msgs
 
 ## What Works Right Now
 
@@ -40,20 +42,19 @@ Last updated: 2026-11-20 (Day 3)
 - Handles multi-command utterances ("drones 1+2 formation, drone 3 orbit")
 - Asks for clarification when commands are ambiguous
 
-## What's Scaffolded but Not Connected
+## What's Wired (via `--live` mode)
 
 | Component | Has Code | Wired to PX4 | Wired to Command Center |
 |-----------|----------|-------------|------------------------|
-| `SwarmManager` (ROS2 node) | Yes | Not tested live | No — serves simulated data |
-| `FleetManager` (allocation) | Yes | No telemetry feed | No |
-| `MissionExecutor` (plans → waypoints) | Yes | No flight commands | No |
-| `PathPlanner` (Voronoi, formations) | Yes | No | No |
-| `IntentParser` (NLP) | Yes | No | Yes (parses, doesn't execute) |
-| GPS waypoint navigation | Yes | Not tested live | No |
+| `SwarmManager` (ROS2 node) | Yes | Yes (--live) | Yes (telemetry + commands) |
+| `FleetManager` (allocation) | Yes | Yes (telemetry sync) | Yes (via MissionExecutor) |
+| `MissionExecutor` (plans → waypoints) | Yes | Yes (via SwarmManager) | Yes |
+| `PathPlanner` (Voronoi, formations) | Yes | Yes (via MissionExecutor) | Yes |
+| `IntentParser` (NLP) | Yes | Yes (parses + executes in live) | Yes |
+| GPS waypoint navigation | Yes | Yes (via SwarmManager) | Yes |
 
 ## What Doesn't Exist Yet
 
-- End-to-end: command → NLP → allocate → plan → fly
 - Camera feed in command center
 - Whisper STT backend
 - Geofencing
@@ -67,26 +68,25 @@ Last updated: 2026-11-20 (Day 3)
 
 ```mermaid
 flowchart TD
-    subgraph Working
-        UI[Command Center UI] <-->|WebSocket| API[FastAPI Backend]
-        API --> NLP[Claude Haiku via Bedrock]
-        PX4[PX4 SITL x3] --> DDS[MicroXRCE-DDS]
-        DDS --> ROS2[ROS2 Topics]
-        GZ[Gazebo Camera] --> Bridge[ros_gz_image] --> ROS2
+    subgraph Pipeline["End-to-End Pipeline (--live mode)"]
+        UI[Command Center UI] <-->|WebSocket 2Hz| Bridge[SwarmBridge]
+        Bridge --> NLP[Claude Haiku via Bedrock]
+        NLP -->|ParsedIntent| Bridge
+        Bridge -->|LAND/RTH/TAKEOFF| Swarm[SwarmManager]
+        Bridge -->|complex missions| Exec[MissionExecutor]
+        Exec --> Fleet[FleetManager]
+        Exec --> PP[PathPlanner]
+        PP -->|Waypoints| Exec
+        Exec -->|GPS waypoints| Swarm
+        Swarm --> CA[Collision Avoidance]
+        CA --> PX4Drone[PX4Drone x3]
+        PX4Drone --> ROS2[ROS2 / MicroXRCE-DDS]
+        ROS2 --> PX4[PX4 SITL]
+        Swarm -->|telemetry| Fleet
+        GZ[Gazebo Camera] --> ImgBridge[ros_gz_image] --> ROS2
     end
 
-    subgraph NotConnected[Not Connected Yet]
-        NLP -.->|parsed commands| Exec[Mission Executor]
-        Exec -.-> Fleet[Fleet Manager]
-        Fleet -.-> Swarm[SwarmManager Node]
-        Swarm -.-> CA[Collision Avoidance]
-        CA -.-> PX4Drone[PX4Drone Controllers]
-        PX4Drone -.-> ROS2
-        ROS2 -.->|telemetry| API
-    end
-
-    style Working fill:#1a2744
-    style NotConnected fill:#2a1a1a
+    style Pipeline fill:#1a2744
 ```
 
 ## Launch Commands

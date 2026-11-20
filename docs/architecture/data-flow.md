@@ -86,7 +86,11 @@ The `PathPlanner.plan_formation()` computes GPS positions for each drone in a tr
 
 ### Step 5: Waypoint Execution
 
-The `MissionExecutor` dispatches waypoints to each drone through the `SwarmManager`. Each `PX4Drone` receives trajectory setpoints via ROS2 px4_msgs and the collision avoidance layer ensures altitude deconfliction and separation monitoring.
+The `MissionExecutor` dispatches waypoints through a `send_waypoints_fn` callback that bridges to `SwarmManager`. The callback converts `Waypoint(lat, lon, alt_m)` objects to GPS tuples and calls `SwarmManager.assign_gps_waypoints()`. For RTH commands, it calls `SwarmManager.command_land()` directly.
+
+Simple commands (LAND, RTH, TAKEOFF) bypass the executor entirely — `SwarmBridge._execute_command()` sends them straight to SwarmManager.
+
+Each `PX4Drone` receives trajectory setpoints via ROS2 px4_msgs and the collision avoidance layer ensures altitude deconfliction and separation monitoring.
 
 ### Step 6: Continuous Telemetry
 

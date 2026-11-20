@@ -27,7 +27,16 @@ For each session, add an entry at the top (newest first):
 
 ---
 
-## Nov 20, 2026 - Day 3
+## Nov 20, 2026 - Day 3 (Session 2)
+
+**Plan:** Wire end-to-end command execution pipeline (NLP → orchestrator → swarm → PX4)
+**Actual:** Rewrote `SwarmBridge` in `app.py` with full execution capability: LAND/RTH/TAKEOFF dispatch directly to SwarmManager, complex missions (formation, search, patrol, orbit) route through MissionExecutor → PathPlanner → SwarmManager GPS waypoints. Added `sync_fleet_telemetry()` that pushes PX4 telemetry into FleetManager on every tick. Rewrote `start_command_center.py` with `--live` mode that creates ROS2 SwarmManager in a background thread, wires FleetManager + MissionExecutor + SwarmBridge together. Fixed `altitude_agl_m` validation bug (ge=1.0 → ge=0.0) — LLM correctly returns 0.0 for land commands. Tested simulated mode: both land and formation commands parse successfully.
+**Blocked by:** Nothing
+**Decision:** Hybrid architecture — single process with ROS2 spinning in background thread rather than separate processes. SwarmBridge holds references to all pipeline components. Simple commands (LAND/RTH/TAKEOFF) bypass MissionExecutor for lower latency.
+**Next:** Test live mode with PX4 SITL (start swarm, connect --live, verify typed commands move drones in Gazebo). Then: camera feed in Command Center, Whisper STT backend.
+**Hours:** 1.5h
+
+## Nov 20, 2026 - Day 3 (Session 1)
 
 **Plan:** Reorganize project structure, nuke all ArduPilot dead code, make project self-contained
 **Actual:** Flattened `src/drone_vla/` to `drone_vla/` at project root (one less nesting level). Deleted 14 ArduPilot files (`drone.py`, `mavlink_bridge.py`, `docker-compose.yml`, `launch/`, etc.) and 9 dead MAVSDK scripts. Tracked `px4_msgs` source in `ros2_ws/src/` so the project is fully self-contained. Updated `pyproject.toml` (packages.find.where to `["."]`, replaced mavsdk dep with pymavlink). Rewrote `main.py` and `orchestrator_node.py` to remove MAVLinkBridge references. Fixed config path resolution bug (`parents[2]` → `parents[1]` after flatten). Synced YAML defaults (haiku-4.5 model, ros2 enabled). Updated 7 docs with correct file paths. Ran full test suite: 11/11 component tests pass, 4 expected ROS2/audio skips.
