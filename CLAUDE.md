@@ -68,11 +68,13 @@ docs/
 
 ## Git Workflow
 - **Commit after every meaningful change.** Don't batch — commit as you go.
+- **Push after every commit.** Run `git push` immediately after committing. The user works across multiple machines and needs changes available everywhere.
 - Use logical, atomic commits: one commit per feature, fix, or doc update.
 - Commit messages: short imperative subject, optional body explaining "why".
 - Always end commit messages with: `Co-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>`
 - Never commit `.env`, credentials, or model weights.
 - When both code and docs change together, separate into two commits (code first, then docs).
+- **Document everything meaningful in OpenKnowledge docs AND commit+push.** If you made a decision, fixed a bug, discovered a gotcha, or changed architecture — it goes in docs/ via OK MCP tools, then gets committed and pushed. No exceptions.
 
 ## Shell Commands
 - When suggesting `!` commands for the user to run, **always use absolute paths**: `bash ~/drone-vla/scripts/foo.sh`, `python3 -I ~/drone-vla/scripts/foo.py`

@@ -137,7 +137,11 @@ PX4 v1.16 renamed the status topic. The message type is still `px4_msgs/msg/Vehi
 
 ### 2. Force-arm required in SITL
 
-`pre_flight_checks_pass` is always `false` in SITL even after disabling check params. Use force-arm by setting `param2=21196.0` in the `VEHICLE_CMD_COMPONENT_ARM_DISARM` command.
+PX4 runs preflight safety checks before allowing arming: magnetometer calibration, barometer health, GPS lock quality, RC transmitter connection, etc. In SITL, several of these checks fail because the simulated sensors don't perfectly replicate real hardware behavior — `pre_flight_checks_pass` reports `false` even after disabling individual check params via `set_px4_params.py`.
+
+The fix is force-arm: setting `param2=21196.0` in the `VEHICLE_CMD_COMPONENT_ARM_DISARM` MAVLink command. The magic number `21196` is PX4's built-in safety override code that bypasses ALL preflight checks. This is the standard PX4 mechanism for SITL and test environments.
+
+**This must NEVER be used on real hardware.** On a physical drone, preflight checks exist to prevent crashes. The force-arm is only in `test_px4_ros2_swarm.py` and should stay SITL-only. When we move to real drones, normal arming (without force) will be used, and any failing preflight checks must be fixed properly (sensor calibration, RC binding, etc.).
 
 ### 3. Integer params via pymavlink need byte encoding
 
