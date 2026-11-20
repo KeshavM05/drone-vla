@@ -27,6 +27,15 @@ For each session, add an entry at the top (newest first):
 
 ---
 
+## Nov 20, 2026 - Day 3
+
+**Plan:** Reorganize project structure, nuke all ArduPilot dead code, make project self-contained
+**Actual:** Flattened `src/drone_vla/` to `drone_vla/` at project root (one less nesting level). Deleted 14 ArduPilot files (`drone.py`, `mavlink_bridge.py`, `docker-compose.yml`, `launch/`, etc.) and 9 dead MAVSDK scripts. Tracked `px4_msgs` source in `ros2_ws/src/` so the project is fully self-contained. Updated `pyproject.toml` (packages.find.where to `["."]`, replaced mavsdk dep with pymavlink). Rewrote `main.py` and `orchestrator_node.py` to remove MAVLinkBridge references. Fixed config path resolution bug (`parents[2]` → `parents[1]` after flatten). Synced YAML defaults (haiku-4.5 model, ros2 enabled). Updated 7 docs with correct file paths. Ran full test suite: 11/11 component tests pass, 4 expected ROS2/audio skips.
+**Blocked by:** Nothing
+**Decision:** Keep px4_msgs inside the project for self-containment (user requirement — "everything needed should be in this folder"). Historical ArduPilot docs (feasibility analysis, hardware recs, etc.) preserved as records of the journey rather than deleted.
+**Next:** Wire live PX4 telemetry to Command Center. End-to-end command execution pipeline.
+**Hours:** 2h
+
 ## Nov 20, 2026 - Day 2
 
 **Plan:** Get simulated camera working with 45-degree fixed mount via ros_gz_bridge into ROS2

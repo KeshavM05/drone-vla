@@ -28,6 +28,7 @@ Last updated: 2026-11-20
 | GPS/NED waypoint conversion | (T) | `geo.py` utility, `assign_gps_waypoints()` on SwarmManager | `b0abef4` |
 | Disk management | (T) | PX4 log cleanup, SDLOG disable, open FD handling | Day 1 |
 | OpenKnowledge docs | (K) | Full doc suite: architecture, guides, API, plan | Ongoing |
+| Project restructure | (T)+(K) | Flatten src/, nuke ArduPilot, self-contained px4_msgs | `2d1b4f2` |
 | Swarm start script (camera) | (T) | Defaults to `x500_mono_cam_45`, configurable model | `b7997b6` |
 | Path planner | (T) | Voronoi decomposition, lawnmower sweep, formation, orbit, perimeter | Scaffold |
 | Fleet manager | (T) | Drone allocation, failover, battery warnings | Scaffold |
@@ -103,3 +104,4 @@ Raw requests from Keshav, as given, with dates:
 | 2026-11-20 | Command center: see all drones, feeds, logs, objectives found, command input (voice+text) | Done (v1) |
 | 2026-11-20 | Guardrails for real drones (work on before testing) | Documented |
 | 2026-11-20 | Organize docs: what's built, what's planned, what I asked for | This doc |
+| 2026-11-20 | Nuke ArduPilot, flatten folder structure, everything self-contained | Done |

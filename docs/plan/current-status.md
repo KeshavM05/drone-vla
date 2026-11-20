@@ -10,6 +10,14 @@ tags:
 
 Last updated: 2026-11-20 (Day 3)
 
+## Recent Changes
+
+- Flattened `src/drone_vla/` → `drone_vla/` at project root (one less nesting level)
+- Nuked all ArduPilot/MAVSDK code (14 files deleted, 9 dead scripts removed)
+- `px4_msgs` source tracked in `ros2_ws/src/` — project is fully self-contained
+- Config path bug fixed (`parents[2]` → `parents[1]` after flatten)
+- All 11 component tests passing (imports, config, geo, CA, fleet, path planner, NLP, web)
+
 ## What Works Right Now
 
 ### Simulation
