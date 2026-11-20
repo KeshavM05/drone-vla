@@ -19,6 +19,7 @@ from rclpy.node import Node
 
 from drone_vla.flight.px4_drone import PX4Drone
 from drone_vla.flight.collision_avoidance import CAConfig, CollisionAvoidance
+from drone_vla.flight.geo import gps_to_ned
 
 logger = logging.getLogger(__name__)
 
@@ -62,6 +63,8 @@ class SwarmManager(Node):
         num_drones: int = 3,
         ca_config: CAConfig | None = None,
         tick_rate_hz: float = 10.0,
+        home_lat: float = 47.397742,
+        home_lon: float = 8.545594,
     ):
         super().__init__("swarm_manager")
         self.drones: list[PX4Drone] = [
@@ -73,6 +76,8 @@ class SwarmManager(Node):
         self._tasks: dict[int, DroneTask] = {}
         self._tick_count = 0
         self._armed_sent = False
+        self.home_lat = home_lat
+        self.home_lon = home_lon
 
         self._timer = self.create_timer(1.0 / tick_rate_hz, self._tick)
         self.get_logger().info(
@@ -196,6 +201,16 @@ class SwarmManager(Node):
             f"Drone {drone_id}: assigned {len(waypoints)} waypoints "
             f"(altitude layer: {-self.ca.assigned_altitude_ned(drone_id):.0f}m AGL)"
         )
+
+    def assign_gps_waypoints(
+        self, drone_id: int, gps_waypoints: list[tuple[float, float, float]]
+    ):
+        """Assign GPS waypoints (lat, lon, alt_agl_m) — converted to NED internally."""
+        ned_waypoints = [
+            gps_to_ned(lat, lon, alt, self.home_lat, self.home_lon)
+            for lat, lon, alt in gps_waypoints
+        ]
+        self.assign_task(drone_id, ned_waypoints)
 
     def assign_formation(self, positions: dict[int, tuple[float, float, float]]):
         for drone_id, (x, y, z) in positions.items():
