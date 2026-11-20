@@ -4,7 +4,7 @@
 Voice/text commands → Claude (Bedrock) intent extraction → autonomous multi-drone swarm orchestration via PX4 + ROS2.
 
 ## Stack
-- **Flight controller**: PX4 v1.16 SITL (switched from ArduPilot — more stable multi-drone sim)
+- **Flight controller**: PX4 v1.16 SITL
 - **LLM**: Claude API via AWS Bedrock for structured intent extraction
 - **Middleware**: Python + ROS2 (Humble) nodes via MicroXRCE-DDS
 - **STT**: faster-whisper for local speech-to-text
@@ -13,26 +13,31 @@ Voice/text commands → Claude (Bedrock) intent extraction → autonomous multi-
 
 ## Project Structure
 ```
-src/drone_vla/
+drone_vla/
   stt/            — Speech-to-text (faster-whisper)
   nlp/            — Intent parsing (Claude Bedrock) + Pydantic schemas
   orchestrator/   — Fleet manager, path planner, mission executor
-  flight/         — ROS2 px4_msgs bridge to PX4
-  ros2_bridge/    — ROS2 node wrappers
+  flight/         — PX4 drone controller, collision avoidance, GPS/NED utils
+  ros2_bridge/    — ROS2 node wrappers (STT, orchestrator, intent)
+  web/            — Command Center (FastAPI + WebSocket dashboard)
 config/           — YAML config + JSON mission schemas
-launch/           — ROS2 launch files
+scripts/          — PX4 SITL launcher, tests, command center starter
+ros2_ws/          — ROS2 workspace with px4_msgs (source this for ROS2)
 tests/            — pytest tests
+docs/             — OpenKnowledge documentation
 ```
 
 ## Commands
 - `drone-vla --text` — Run in text-input mode (no mic needed)
+- `drone-vla --web` — Launch Command Center web UI
 - `drone-vla` — Run with voice input (requires microphone)
 - `pytest` — Run tests
 - `bash ~/drone-vla/scripts/start_px4_swarm.sh` — Launch 3-drone PX4 SITL swarm + MicroXRCEAgent
 - `python3 ~/drone-vla/scripts/test_px4_ros2_swarm.py` — Swarm test (arm, takeoff, triangle, land)
 - `python3 ~/drone-vla/scripts/set_px4_params.py` — Disable PX4 preflight checks via pymavlink
-- `python3 -I ~/drone-vla/scripts/test_collision_avoidance.py` — Test collision avoidance with 3 drones
+- `python3 ~/drone-vla/scripts/test_collision_avoidance.py` — Test collision avoidance with 3 drones
 - `python3 ~/drone-vla/scripts/start_command_center.py` — Launch Command Center (http://localhost:8080)
+- `python3 ~/drone-vla/scripts/test_camera_bridge.py` — Test Gazebo camera → ROS2 image bridge
 
 ## Documentation
 This project uses **OpenKnowledge** for all documentation. This is a hard requirement — follow it throughout the entire development process.
@@ -50,16 +55,23 @@ docs/
   index.md                        — Documentation hub
   architecture/
     system-overview.md             — 4-tier architecture with Mermaid diagrams
-    data-flow.md                   — End-to-end command trace with sequence diagrams
+    collision-avoidance.md         — 3-layer CA system design
+    guardrails.md                  — Safety rules for sim vs real
+    data-flow.md                   — End-to-end command trace
   guides/
     getting-started.md             — Environment setup, first run
     px4-sitl-setup.md              — PX4 v1.16 multi-drone SITL with Gazebo + ROS2
-    ardupilot-sitl-setup.md        — Legacy (replaced by PX4)
+    command-center.md              — Command Center web UI guide
+    disk-management.md             — Disk space management
   api/
     mission-schemas.md             — Pydantic model reference
     fleet-manager.md               — Fleet allocation and failover API
+  plan/
+    current-status.md              — Living snapshot of project state
+    feature-backlog.md             — Organized feature backlog
+    daily-log.md                   — Daily progress log
   milestones/
-    phase-1-simulation.md          — 14-day MVP plan with accountability checkpoints
+    phase-1-simulation.md          — 14-day MVP plan
 ```
 
 ### When to Update Docs
@@ -82,6 +94,12 @@ docs/
 - When suggesting `!` commands for the user to run, **always use absolute paths**: `bash ~/drone-vla/scripts/foo.sh`, `python3 -I ~/drone-vla/scripts/foo.py`
 - **Never** use `cd && ./relative/path` patterns — the shell tab-completes instead of executing
 - For env vars inline: `VAR=val command /absolute/path`
+
+## ROS2 Workspace
+- `ros2_ws/` contains px4_msgs source and build — source `ros2_ws/install/local_setup.bash` for ROS2 msg types
+- px4_msgs is also available from `~/ros_workspace_2025/perception_ws/install/` (sourced in .bashrc)
+- PX4 communication uses ROS2 px4_msgs via MicroXRCE-DDS (not MAVLink for flight control)
+- pymavlink is only used for parameter setting (`scripts/set_px4_params.py`)
 
 ## Disk Space Management — READ THIS FIRST
 This machine has a 149 GB partition that fills up fast. Every agent working in this repo MUST follow these rules:

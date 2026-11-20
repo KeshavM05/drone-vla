@@ -38,11 +38,7 @@ models/
 *.pt
 *.onnx
 
-# ArduPilot SITL artifacts
-mav.parm
-mav.tlog
-mav.tlog.raw
-eeprom.bin
-ros2_ws/
-terrain/
-*.log
+# ROS2 workspace build artifacts (source is tracked, builds are not)
+ros2_ws/build/
+ros2_ws/install/
+ros2_ws/log/

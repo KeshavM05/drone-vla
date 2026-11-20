@@ -21,7 +21,7 @@ fleet:
 
 simulation:
   sitl_instances: 3
-  start_port: 14540  # MAVSDK gRPC ports: 14540, 14541, 14542, ...
+  start_port: 14540
   home_lat: 47.397742
   home_lon: 8.545594
   home_alt: 488.0
