@@ -31,6 +31,7 @@ tests/            — pytest tests
 - `bash ~/drone-vla/scripts/start_px4_swarm.sh` — Launch 3-drone PX4 SITL swarm + MicroXRCEAgent
 - `python3 ~/drone-vla/scripts/test_px4_ros2_swarm.py` — Swarm test (arm, takeoff, triangle, land)
 - `python3 ~/drone-vla/scripts/set_px4_params.py` — Disable PX4 preflight checks via pymavlink
+- `python3 -I ~/drone-vla/scripts/test_collision_avoidance.py` — Test collision avoidance with 3 drones
 
 ## Documentation
 This project uses **OpenKnowledge** for all documentation. This is a hard requirement — follow it throughout the entire development process.

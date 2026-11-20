@@ -23,12 +23,22 @@ class LLMConfig(BaseModel):
     temperature: float = 0.0
 
 
+class CollisionAvoidanceConfig(BaseModel):
+    altitude_base_m: float = 15.0
+    altitude_layer_m: float = 5.0
+    warning_distance_m: float = 10.0
+    critical_distance_m: float = 5.0
+    repulsive_gain: float = 3.0
+    max_repulsive_offset_m: float = 8.0
+
+
 class FleetConfig(BaseModel):
     max_drones: int = 5
     default_altitude_m: float = 20.0
     min_battery_pct: int = 20
     failover_enabled: bool = True
     deconfliction_buffer_m: float = 5.0
+    collision_avoidance: CollisionAvoidanceConfig = CollisionAvoidanceConfig()
 
 
 class SimulationConfig(BaseModel):
@@ -37,10 +47,11 @@ class SimulationConfig(BaseModel):
     home_lat: float = 47.397742
     home_lon: float = 8.545594
     home_alt: float = 488.0
+    camera_model: str = "x500_mono_cam_45"
 
 
 class ROS2Config(BaseModel):
-    enabled: bool = False
+    enabled: bool = True
     namespace: str = "/drone_vla"
     qos_depth: int = 10
 
