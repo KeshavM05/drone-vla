@@ -32,6 +32,7 @@ tests/            — pytest tests
 - `python3 ~/drone-vla/scripts/test_px4_ros2_swarm.py` — Swarm test (arm, takeoff, triangle, land)
 - `python3 ~/drone-vla/scripts/set_px4_params.py` — Disable PX4 preflight checks via pymavlink
 - `python3 -I ~/drone-vla/scripts/test_collision_avoidance.py` — Test collision avoidance with 3 drones
+- `python3 ~/drone-vla/scripts/start_command_center.py` — Launch Command Center (http://localhost:8080)
 
 ## Documentation
 This project uses **OpenKnowledge** for all documentation. This is a hard requirement — follow it throughout the entire development process.
