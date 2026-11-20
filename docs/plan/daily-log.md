@@ -27,6 +27,15 @@ For each session, add an entry at the top (newest first):
 
 ---
 
+## Nov 20, 2026 - Day 2
+
+**Plan:** Get simulated camera working with 45-degree fixed mount via ros_gz_bridge into ROS2
+**Actual:** Created custom `x500_mono_cam_45` Gazebo model (0.7854 rad pitch = 45 deg forward-down). Discovered critical version mismatch: the default `ros-humble-ros-gz-bridge` links against Gazebo Fortress (gz-transport12) but we run Gazebo Harmonic (gz-transport13) — the bridge silently produces zero messages. Fixed by installing `ros-humble-ros-gzharmonic-bridge` and `ros-humble-ros-gzharmonic-image` (replaces the Fortress packages). Camera images now flow at ~4-9 Hz, 1280x960 RGB, verified with test script that saves frames as PNG. Also documented all PX4 SITL findings and disk management procedures after losing previous chat history.
+**Blocked by:** ros_gz_bridge Fortress/Harmonic transport version mismatch — no error messages, just silence. Took multiple install attempts (`apt 404` errors from stale optional deps in meta-package; fixed with `--no-install-recommends`). Also: previous session context was lost to compaction with no doc trail, so had to reconstruct and document retroactively.
+**Decision:** 45-degree camera angle for the fixed mount — best compromise between forward navigation view and ground reconnaissance. No gimbal on real hardware. Also established strict doc-and-push-after-every-change rule to prevent knowledge loss.
+**Next:** Integrate camera feed into swarm start script. Begin telemetry streaming layer. Start NLP command parsing with Claude Bedrock.
+**Hours:** 3h
+
 ## Nov 19, 2026 - Day 1 (Evening Session)
 
 **Plan:** Fix arming failures in ROS2 swarm test, get 3-drone formation flying

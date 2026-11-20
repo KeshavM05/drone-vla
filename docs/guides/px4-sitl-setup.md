@@ -173,6 +173,61 @@ python3 ~/drone-vla/scripts/test_px4_ros2_swarm.py
 
 This arms all 3 drones, takes off to 20m, flies a triangle formation (30m spacing), holds for 10s, and lands. Expected runtime: ~70 seconds.
 
+## Camera Simulation
+
+### 45-Degree Fixed Camera (No Gimbal)
+
+The real drone has a single camera with no gimbal, mounted at 45 degrees (forward-and-down). This gives the best compromise between seeing ahead for navigation and seeing the ground for reconnaissance.
+
+PX4 provides three camera models:
+
+| Model | Angle | Gazebo Model Name |
+|-------|-------|-------------------|
+| `x500_mono_cam` | 0 deg (forward) | Stock PX4 |
+| `x500_mono_cam_down` | 90 deg (straight down) | Stock PX4 |
+| `x500_mono_cam_45` | 45 deg (forward-down) | Custom, in PX4 models dir |
+
+The 45-degree model lives at `~/PX4-Autopilot/Tools/simulation/gz/models/x500_mono_cam_45/model.sdf`. It uses the same `mono_cam` sensor (1280x960 RGB, 30 Hz, 100 deg FOV) but with pitch set to `0.7854` radians.
+
+To launch with the camera:
+
+```bash
+PX4_SYS_AUTOSTART=4001 PX4_SIM_MODEL=gz_x500_mono_cam_45 \
+    ./build/px4_sitl_default/bin/px4 -i 1
+```
+
+### Bridging Camera Images to ROS2
+
+Gazebo Harmonic publishes camera images on a long topic path:
+
+```
+/world/default/model/x500_mono_cam_45_1/link/camera_link/sensor/imager/image
+```
+
+To bridge into ROS2:
+
+```bash
+ros2 run ros_gz_image image_bridge \
+    /world/default/model/x500_mono_cam_45_1/link/camera_link/sensor/imager/image
+```
+
+**Critical: you MUST install `ros-humble-ros-gzharmonic-bridge` and `ros-humble-ros-gzharmonic-image`.** The default `ros-humble-ros-gz-bridge` is built against Gazebo Fortress (gz-transport12), but we run Gazebo Harmonic (gz-transport13). They cannot communicate. The gzharmonic packages replace the Fortress ones and link against transport13.
+
+```bash
+sudo apt-get install -y --no-install-recommends \
+    ros-humble-ros-gzharmonic-bridge \
+    ros-humble-ros-gzharmonic-image
+```
+
+Test with:
+
+```bash
+python3 ~/drone-vla/scripts/test_camera_bridge.py \
+    /world/default/model/x500_mono_cam_45_1/link/camera_link/sensor/imager/image
+```
+
+This saves a frame to `/tmp/drone_cam_frame.png`. Expected: 1280x960 RGB at ~4-9 Hz.
+
 ## Always Kill When Done
 
 ```bash
