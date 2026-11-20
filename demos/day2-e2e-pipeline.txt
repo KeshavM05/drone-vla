@@ -1,0 +1,74 @@
+============================================
+  DRONE VLA — END-TO-END LIVE DEMO
+  Day 2: Full Pipeline Working
+  Date: 2026-11-20
+============================================
+
+Stack: PX4 v1.16 SITL + Gazebo Harmonic + ROS2 Humble + Claude Bedrock + FastAPI
+
+STEP 1: Current state
+  Swarm state: in_flight
+  Drones: 3
+    Drone 1: armed=True, alt=-0.1m, lat=47.397971, lon=8.546165
+    Drone 2: armed=True, alt=0.0m, lat=47.397998, lon=8.546164
+    Drone 3: armed=True, alt=0.0m, lat=47.398025, lon=8.546164
+
+STEP 2: Send NLP command: "all 3 drones fly triangle formation at 20 meters with 30 meter spacing"
+  NLP status: executed
+  Confidence: 0.95
+  Parsed: type=formation_flight, formation=triangle, alt=20.0m, spacing=30.0m
+  Executed: mission=M0001, drones=[1, 2, 3], waypoints=3
+
+STEP 3: Tracking drone movement
+  T+0s:
+    Drone 1: pos=(-0.0, 0.1) alt=-0.1m dist_from_origin=0.1m task=True
+    Drone 2: pos=(0.1, 0.0) alt=0.0m dist_from_origin=0.1m task=True
+    Drone 3: pos=(0.0, 0.0) alt=0.0m dist_from_origin=0.0m task=True
+  T+5s:
+    Drone 1: pos=(1.0, 0.0) alt=3.1m dist_from_origin=1.0m task=True
+    Drone 2: pos=(2.2, 2.2) alt=3.1m dist_from_origin=3.1m task=True
+    Drone 3: pos=(0.8, 3.4) alt=3.1m dist_from_origin=3.5m task=True
+  T+10s:
+    Drone 1: pos=(0.2, -0.9) alt=10.6m dist_from_origin=0.9m task=True
+    Drone 2: pos=(12.2, 15.1) alt=10.0m dist_from_origin=19.4m task=True
+    Drone 3: pos=(4.9, 23.8) alt=10.1m dist_from_origin=24.2m task=True
+
+STEP 4: Send NLP command: "land all drones"
+  NLP status: executed
+  Executed: land -> drones [1, 2, 3]
+
+STEP 5: Landing progress (T+5s)
+  Swarm state: landing
+    Drone 1: alt=13.3m, armed=True
+    Drone 2: alt=13.9m, armed=True
+    Drone 3: alt=14.7m, armed=True
+
+EVENT LOG:
+  [system  ] NLP connected (Claude Haiku 4.5 via Bedrock)
+  [system  ] Command Center online — LIVE (PX4) mode
+  [operator] Command received: all 3 drones fly triangle formation at 20 meters with 30 meter spacing
+  [nlp     ] Parsed 1 command(s), confidence: 95%
+  [executor] Mission M0001: formation_flight -> drones [1, 2, 3], 3 waypoints
+  [operator] Command received: land all drones
+  [nlp     ] Parsed 1 command(s), confidence: 99%
+  [executor] LAND: drones [1, 2, 3]
+
+============================================
+  END-TO-END PIPELINE: WORKING
+============================================
+
+Previous demo (Day 1 — saved separately):
+  - 3 drones arm, take off to 20m
+  - Fly triangle formation (30m spacing)
+  - Hold 10s, land
+  - Script: test_px4_ros2_swarm.py
+
+What changed Day 1 -> Day 2:
+  - Day 1: Hardcoded script tells drones what to do
+  - Day 2: Type English -> Claude parses intent -> orchestrator allocates
+    drones -> path planner computes waypoints -> swarm manager sends to
+    PX4 -> drones fly in Gazebo. Full autonomy pipeline.
+  - Added: Command Center web UI (FastAPI + WebSocket + live telemetry)
+  - Added: FleetManager drone allocation + collision avoidance layers
+  - Added: MissionExecutor + PathPlanner for waypoint computation
+  - Fixed: EKF magnetometer, INT32 param encoding, altitude validation
