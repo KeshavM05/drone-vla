@@ -9,7 +9,7 @@ PARAMS = {
     "COM_RCL_EXCEPT": 4,
     "NAV_DLL_ACT": 0,
     "CBRK_SUPPLY_CHK": 894281,
-    "SYS_HAS_MAG": 0,
+    "SYS_HAS_MAG": 1,
     "COM_ARM_WO_GPS": 1,
     "SDLOG_MODE": -1,
 }

@@ -40,7 +40,7 @@ class DroneState:
 
     @property
     def is_available(self) -> bool:
-        return self.status in (DroneStatus.IDLE, DroneStatus.LANDED)
+        return self.status in (DroneStatus.IDLE, DroneStatus.ARMED, DroneStatus.LANDED)
 
     @property
     def is_healthy(self) -> bool:

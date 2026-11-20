@@ -110,18 +110,28 @@ class MissionExecutor:
                             plans[drone.drone_id] = paths[i]
 
             case MissionType.FORMATION_FLIGHT:
-                if command.center_point and command.formation_type:
-                    positions = plan_formation(
-                        command.center_point,
-                        command.formation_type,
-                        n,
-                        command.spacing_m or 10.0,
-                        alt,
-                        command.heading_deg or 0.0,
-                    )
-                    for i, drone in enumerate(drones):
-                        if i < len(positions):
-                            plans[drone.drone_id] = [positions[i]]
+                if command.formation_type:
+                    center = command.center_point
+                    if not center:
+                        from drone_vla.nlp.schemas import GeoPoint
+                        valid = [d for d in drones if d.lat != 0.0]
+                        if valid:
+                            center = GeoPoint(
+                                lat=sum(d.lat for d in valid) / len(valid),
+                                lon=sum(d.lon for d in valid) / len(valid),
+                            )
+                    if center:
+                        positions = plan_formation(
+                            center,
+                            command.formation_type,
+                            n,
+                            command.spacing_m or 10.0,
+                            alt,
+                            command.heading_deg or 0.0,
+                        )
+                        for i, drone in enumerate(drones):
+                            if i < len(positions):
+                                plans[drone.drone_id] = [positions[i]]
 
             case MissionType.POINT_INSPECTION:
                 if command.target_point:
