@@ -33,8 +33,14 @@ For each session, add an entry at the top (newest first):
 **Actual:** Rewrote `SwarmBridge` in `app.py` with full execution capability: LAND/RTH/TAKEOFF dispatch directly to SwarmManager, complex missions (formation, search, patrol, orbit) route through MissionExecutor → PathPlanner → SwarmManager GPS waypoints. Added `sync_fleet_telemetry()` that pushes PX4 telemetry into FleetManager on every tick. Rewrote `start_command_center.py` with `--live` mode that creates ROS2 SwarmManager in a background thread, wires FleetManager + MissionExecutor + SwarmBridge together. Fixed `altitude_agl_m` validation bug (ge=1.0 → ge=0.0) — LLM correctly returns 0.0 for land commands. Tested simulated mode: both land and formation commands parse successfully.
 **Blocked by:** Nothing
 **Decision:** Hybrid architecture — single process with ROS2 spinning in background thread rather than separate processes. SwarmBridge holds references to all pipeline components. Simple commands (LAND/RTH/TAKEOFF) bypass MissionExecutor for lower latency.
-**Next:** Test live mode with PX4 SITL (start swarm, connect --live, verify typed commands move drones in Gazebo). Then: camera feed in Command Center, Whisper STT backend.
-**Hours:** 1.5h
+**Next:** Camera feed in Command Center, Whisper STT backend.
+**Hours:** 3h (including live testing)
+
+**Live test results:**
+- Fixed 3 bugs blocking E2E: `SYS_HAS_MAG=0` broke EKF yaw alignment; `FleetManager.is_available` excluded ARMED drones; `MissionExecutor` required `center_point` for formations
+- After fixes: "fly triangle formation" → NLP parses → allocates 3 drones → computes waypoints → drones fly to positions in Gazebo
+- "land all drones" → all 3 descend and land
+- Also fixed `struct.pack("I", -1)` crash in set_px4_params.py (unsigned can't hold -1)
 
 ## Nov 20, 2026 - Day 3 (Session 1)
 

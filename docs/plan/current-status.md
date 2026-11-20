@@ -8,7 +8,7 @@ tags:
 ---
 # Current System Status
 
-Last updated: 2026-11-20 (Day 3, evening)
+Last updated: 2026-11-20 (Day 3, E2E verified)
 
 ## Recent Changes
 
@@ -30,11 +30,18 @@ Last updated: 2026-11-20 (Day 3, evening)
 
 ### Command Center
 - Web dashboard at `http://localhost:8080`
-- Shows 3 drone cards with live (simulated) telemetry
+- Two modes: `--live` (PX4 connected, commands execute) or simulated (UI dev)
+- Shows 3 drone cards with live telemetry from PX4
 - 2D map with drone positions, headings, velocity vectors
-- NLP command input: type a sentence, Claude parses it into structured commands
+- NLP command input: type a sentence, Claude parses and executes it
 - Voice input via browser Web Speech API
 - Event log with color-coded sources
+
+### End-to-End Pipeline (verified working)
+- Type a command → Claude Haiku 4.5 parses intent → FleetManager allocates drones → PathPlanner computes waypoints → SwarmManager sends to PX4 → drones fly in Gazebo
+- Tested: "fly triangle formation" → all 3 drones moved to formation positions
+- Tested: "land all drones" → all 3 drones descended and landed
+- LAND/RTH/TAKEOFF go directly to SwarmManager; complex missions route through MissionExecutor
 
 ### NLP Pipeline
 - Claude Haiku 4.5 on AWS Bedrock
