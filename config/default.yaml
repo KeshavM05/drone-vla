@@ -8,7 +8,7 @@ stt:
 llm:
   provider: "bedrock"
   region: "us-east-1"
-  model_id: "us.anthropic.claude-sonnet-4-20250514"
+  model_id: "us.anthropic.claude-haiku-4-5-20251001-v1:0"
   max_tokens: 2048
   temperature: 0.0
 
@@ -27,6 +27,6 @@ simulation:
   home_alt: 488.0
 
 ros2:
-  enabled: false
+  enabled: true
   namespace: "/drone_vla"
   qos_depth: 10

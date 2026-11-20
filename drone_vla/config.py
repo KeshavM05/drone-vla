@@ -66,7 +66,7 @@ class AppConfig(BaseModel):
 
 def load_config(path: str | Path | None = None) -> AppConfig:
     if path is None:
-        path = Path(__file__).parents[2] / "config" / "default.yaml"
+        path = Path(__file__).parents[1] / "config" / "default.yaml"
     path = Path(path)
 
     if path.exists():
