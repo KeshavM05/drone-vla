@@ -51,7 +51,8 @@ docs/
     data-flow.md                   — End-to-end command trace with sequence diagrams
   guides/
     getting-started.md             — Environment setup, first run
-    ardupilot-sitl-setup.md        — Docker or native SITL configuration
+    px4-sitl-setup.md              — PX4 v1.16 multi-drone SITL with Gazebo + ROS2
+    ardupilot-sitl-setup.md        — Legacy (replaced by PX4)
   api/
     mission-schemas.md             — Pydantic model reference
     fleet-manager.md               — Fleet allocation and failover API
@@ -77,6 +78,33 @@ docs/
 - When suggesting `!` commands for the user to run, **always use absolute paths**: `bash ~/drone-vla/scripts/foo.sh`, `python3 -I ~/drone-vla/scripts/foo.py`
 - **Never** use `cd && ./relative/path` patterns — the shell tab-completes instead of executing
 - For env vars inline: `VAR=val command /absolute/path`
+
+## Disk Space Management — READ THIS FIRST
+This machine has a 149 GB partition that fills up fast. Every agent working in this repo MUST follow these rules:
+
+### PX4 SITL writes flight logs that eat disk
+- PX4 writes `.ulg` logs continuously to `~/PX4-Autopilot/build/px4_sitl_default/rootfs/*/log/`
+- 3 idle drones = 27+ GB in hours. **Always kill PX4 when done:**
+  ```
+  pkill -f "px4.*-i [0-9]"; pkill -f "gz sim"; pkill -f MicroXRCEAgent
+  ```
+- The start script (`scripts/start_px4_swarm.sh`) clears old logs automatically on launch
+- `scripts/set_px4_params.py` disables logging (`SDLOG_MODE=-1`) but only takes effect after PX4 boots
+
+### Open file descriptors hold disk even after deletion
+- If you `rm` files while PX4/Gazebo are still running, the OS does NOT free the space — the processes hold open file handles
+- You MUST kill the processes first, then delete files, to actually reclaim disk
+- Run `df -h /` before and after cleanup to verify space was freed
+
+### Before starting PX4
+- Check disk: `df -h /` — do NOT start PX4 if less than 5 GB free
+- Use the start script which handles cleanup: `bash ~/drone-vla/scripts/start_px4_swarm.sh`
+
+### Known large directories on this machine
+- `~/PX4-Autopilot/build/` — 3.8 GB (PX4 build artifacts)
+- `~/PX4-Autopilot/.git/` — 1.3 GB
+- `~/.local/lib/python3.10/site-packages/nvidia+torch+triton` — 5 GB (PyTorch GPU stack)
+- `~/.cache/google-chrome/` — 1+ GB (safe to clear)
 
 ## Conventions
 - Python 3.10+, asyncio throughout

@@ -22,6 +22,7 @@ Setup and development guides.
 
 - [Getting Started](./guides/getting-started.md) — Environment setup, first simulation run
 - [PX4 SITL Setup](./guides/px4-sitl-setup.md) — PX4 v1.16 multi-drone SITL with Gazebo + MicroXRCE-DDS + ROS2
+- [Disk Management](./guides/disk-management.md) — Preventing PX4 from filling the disk, cleanup procedures
 - [ArduPilot SITL Setup](./guides/ardupilot-sitl-setup.md) — Legacy (replaced by PX4)
 
 ### [API Reference](./api/mission-schemas.md)
