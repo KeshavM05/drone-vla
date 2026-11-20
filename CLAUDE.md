@@ -1,14 +1,14 @@
 # Drone VLA — Natural Language Drone Swarm C2
 
 ## Project Overview
-Voice/text commands → Claude (Bedrock) intent extraction → autonomous multi-drone swarm orchestration via ArduPilot + ROS2.
+Voice/text commands → Claude (Bedrock) intent extraction → autonomous multi-drone swarm orchestration via PX4 + ROS2.
 
 ## Stack
-- **Flight controller**: ArduPilot SITL (not PX4 — PX4 lacks proper ros_gz_bridge)
+- **Flight controller**: PX4 v1.16 SITL (switched from ArduPilot — more stable multi-drone sim)
 - **LLM**: Claude API via AWS Bedrock for structured intent extraction
-- **Middleware**: Python + ROS2 (Humble) nodes
+- **Middleware**: Python + ROS2 (Humble) nodes via MicroXRCE-DDS
 - **STT**: faster-whisper for local speech-to-text
-- **Simulation**: ArduPilot SITL + Gazebo with ros_gz_bridge
+- **Simulation**: PX4 SITL + Gazebo Harmonic
 - **Path planning**: Voronoi decomposition, APF, boustrophedon sweep
 
 ## Project Structure
@@ -17,7 +17,7 @@ src/drone_vla/
   stt/            — Speech-to-text (faster-whisper)
   nlp/            — Intent parsing (Claude Bedrock) + Pydantic schemas
   orchestrator/   — Fleet manager, path planner, mission executor
-  flight/         — MAVSDK-Python bridge to ArduPilot
+  flight/         — ROS2 px4_msgs bridge to PX4
   ros2_bridge/    — ROS2 node wrappers
 config/           — YAML config + JSON mission schemas
 launch/           — ROS2 launch files
@@ -28,8 +28,9 @@ tests/            — pytest tests
 - `drone-vla --text` — Run in text-input mode (no mic needed)
 - `drone-vla` — Run with voice input (requires microphone)
 - `pytest` — Run tests
-- `docker compose up` — Start ArduPilot SITL + Gazebo
-- `ros2 launch drone_vla simulation.launch.py` — Full ROS2 pipeline
+- `bash ~/drone-vla/scripts/start_px4_swarm.sh` — Launch 3-drone PX4 SITL swarm + MicroXRCEAgent
+- `python3 ~/drone-vla/scripts/test_px4_ros2_swarm.py` — Swarm test (arm, takeoff, triangle, land)
+- `python3 ~/drone-vla/scripts/set_px4_params.py` — Disable PX4 preflight checks via pymavlink
 
 ## Documentation
 This project uses **OpenKnowledge** for all documentation. This is a hard requirement — follow it throughout the entire development process.
@@ -72,10 +73,15 @@ docs/
 - Never commit `.env`, credentials, or model weights.
 - When both code and docs change together, separate into two commits (code first, then docs).
 
+## Shell Commands
+- When suggesting `!` commands for the user to run, **always use absolute paths**: `bash ~/drone-vla/scripts/foo.sh`, `python3 -I ~/drone-vla/scripts/foo.py`
+- **Never** use `cd && ./relative/path` patterns — the shell tab-completes instead of executing
+- For env vars inline: `VAR=val command /absolute/path`
+
 ## Conventions
 - Python 3.10+, asyncio throughout
 - Pydantic v2 for all data schemas
-- MAVSDK-Python (not pymavlink) for ArduPilot communication
+- ROS2 px4_msgs for PX4 communication (pymavlink only for param setting)
 - All drone IDs are 1-based integers
 - GPS coordinates as decimal degrees (lat, lon)
 - Altitudes in meters AGL (above ground level)

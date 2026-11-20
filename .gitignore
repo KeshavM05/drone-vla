@@ -43,3 +43,6 @@ mav.parm
 mav.tlog
 mav.tlog.raw
 eeprom.bin
+ros2_ws/
+terrain/
+*.log
