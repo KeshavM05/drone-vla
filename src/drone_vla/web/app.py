@@ -17,6 +17,9 @@ logger = logging.getLogger(__name__)
 
 STATIC_DIR = Path(__file__).parent / "static"
 
+from drone_vla.config import LLMConfig
+from drone_vla.nlp.intent_parser import IntentParser
+
 app = FastAPI(title="Drone VLA Command Center")
 app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
 
@@ -163,6 +166,12 @@ bridge = SwarmBridge()
 @app.on_event("startup")
 async def startup():
     asyncio.create_task(bridge.telemetry_loop())
+    try:
+        parser = IntentParser(LLMConfig())
+        bridge.set_intent_parser(parser)
+        bridge.add_log("info", "NLP connected (Claude Haiku 4.5 via Bedrock)", "system")
+    except Exception as e:
+        bridge.add_log("warning", f"NLP init failed: {e}", "system")
     bridge.add_log("info", "Command Center online", "system")
 
 

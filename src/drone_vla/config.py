@@ -18,7 +18,7 @@ class STTConfig(BaseModel):
 class LLMConfig(BaseModel):
     provider: str = "bedrock"
     region: str = "us-east-1"
-    model_id: str = "us.anthropic.claude-sonnet-4-20250514"
+    model_id: str = "us.anthropic.claude-haiku-4-5-20251001-v1:0"
     max_tokens: int = 2048
     temperature: float = 0.0
 

@@ -87,7 +87,14 @@ class IntentParser:
         assistant_text = response_body["content"][0]["text"]
 
         logger.debug("Bedrock response: %s", assistant_text)
-        parsed = json.loads(assistant_text)
+        # Strip markdown code fences if present
+        text = assistant_text.strip()
+        if text.startswith("```"):
+            text = text.split("\n", 1)[1] if "\n" in text else text[3:]
+            if text.endswith("```"):
+                text = text[:-3]
+            text = text.strip()
+        parsed = json.loads(text)
         intent = ParsedIntent(**parsed)
 
         for cmd in intent.commands:
