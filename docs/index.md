@@ -16,6 +16,7 @@ System design, tier breakdown, and design decisions.
 
 - [System Overview](./architecture/system-overview.md) — 4-tier pipeline from voice to flight
 - [Collision Avoidance](./architecture/collision-avoidance.md) — Altitude layering, separation monitoring, reactive avoidance
+- [Safety Guardrails](./architecture/guardrails.md) — All safety systems required before real drone testing
 - [Data Flow](./architecture/data-flow.md) — How a spoken command becomes coordinated drone movement
 
 ### [Guides](./guides/getting-started.md)
@@ -42,6 +43,8 @@ Module-level documentation and data contracts.
 - [Weeks 2-3: Core Pipeline](./plan/week-2-3-core-pipeline.md) — NLP-to-flight integration
 - [Cost & Feasibility Analysis](./plan/cost-feasibility-analysis.md) — Full financial breakdown and scaling projections
 - [Hardware Feasibility](./plan/feasibility-analysis.md) — SpeedyBee F405 V4 purchase decision and ordering plan
+- [Feature Backlog](./plan/feature-backlog.md) — All features: built, in-progress, and planned
+- [Current Status](./plan/current-status.md) — Living snapshot of what works today
 - [Daily Log](./plan/daily-log.md) — Accountability journal
 
 ### [Milestones](./milestones/phase-1-simulation.md)
