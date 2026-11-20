@@ -27,13 +27,13 @@ flowchart TD
     end
 
     subgraph TIER3["Tier 3: Flight Bridge"]
-        G --> H["MAVLink Bridge\nMAVSDK-Python"]
-        H --> I["ArduPilot SITL\nper-drone instance"]
+        G --> H["ROS2 px4_msgs\nOffboard Control"]
+        H --> I["PX4 SITL v1.16\nper-drone instance"]
     end
 
     subgraph TIER4["Tier 4: Edge Sensing"]
-        I --> J["Gazebo Simulation\nCamera + Sensors"]
-        J --> K["ROS2 gz_bridge\nSensor Topics"]
+        I --> J["Gazebo Harmonic\nCamera + Sensors"]
+        J --> K["MicroXRCE-DDS\nROS2 Topics"]
     end
 
     K -.->|"Telemetry + Detections"| E
@@ -67,24 +67,24 @@ flowchart TD
 
 ### Tier 3: Flight Bridge
 
-**Purpose:** Abstract hardware communication. All drone control flows through MAVSDK-Python to ArduPilot.
+**Purpose:** Abstract hardware communication. All drone control flows through ROS2 px4_msgs to PX4 via MicroXRCE-DDS.
 
 | Component | Module | Role |
 |-----------|--------|------|
-| Drone | `flight/drone.py` | Per-drone state machine: arm, takeoff, goto, waypoint sequence, RTH, land |
-| MAVLink Bridge | `flight/mavlink_bridge.py` | Multi-instance connection manager with concurrent telemetry streaming |
+| Drone Controller | `flight/drone_controller.py` | Per-drone offboard control: arm, takeoff, trajectory setpoints, land |
+| ROS2 Bridge | `flight/ros2_bridge.py` | Publishes `OffboardControlMode`, `TrajectorySetpoint`, `VehicleCommand` per drone |
 
-**Key design decision:** ArduPilot over PX4 — ArduPilot has a functional `ros_gz_bridge` for camera/sensor data; PX4 did not at the time of evaluation.
+**Key design decision:** Switched from ArduPilot to PX4 v1.16 on Day 1 — ArduPilot multi-instance SITL was unstable. PX4 provides native ROS2 integration via MicroXRCE-DDS without needing ros_gz_bridge for command/control. See [PX4 SITL Setup](../guides/px4-sitl-setup.md) for details.
 
 ### Tier 4: Edge Sensing (Simulation)
 
-**Purpose:** Gazebo provides simulated cameras and sensors; `ros_gz_bridge` exposes them as ROS2 topics.
+**Purpose:** Gazebo Harmonic provides simulated cameras and sensors; MicroXRCE-DDS exposes PX4 telemetry as ROS2 topics.
 
 | Component | Config | Role |
 |-----------|--------|------|
-| ArduPilot SITL | `docker-compose.yml` | 3 simulated ArduCopter instances |
-| Gazebo | `docker-compose.yml` | Physics + rendering engine |
-| ros_gz_bridge | `launch/simulation.launch.py` | Bridges Gazebo sensor topics to ROS2 |
+| PX4 SITL | `scripts/start_px4_swarm.sh` | 3 simulated x500 quadcopter instances |
+| Gazebo Harmonic | Started by PX4 drone 1 | Physics + rendering engine |
+| MicroXRCE-DDS Agent | UDP port 8888 | Bridges PX4 uORB topics to ROS2 |
 
 ## ROS2 Integration
 

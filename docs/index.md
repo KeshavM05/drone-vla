@@ -21,7 +21,8 @@ System design, tier breakdown, and design decisions.
 Setup and development guides.
 
 - [Getting Started](./guides/getting-started.md) — Environment setup, first simulation run
-- [ArduPilot SITL Setup](./guides/ardupilot-sitl-setup.md) — Docker or native SITL configuration
+- [PX4 SITL Setup](./guides/px4-sitl-setup.md) — PX4 v1.16 multi-drone SITL with Gazebo + MicroXRCE-DDS + ROS2
+- [ArduPilot SITL Setup](./guides/ardupilot-sitl-setup.md) — Legacy (replaced by PX4)
 
 ### [API Reference](./api/mission-schemas.md)
 Module-level documentation and data contracts.
