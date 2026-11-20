@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 import json
 import logging
+import math
 import time
 from pathlib import Path
 from typing import Optional
@@ -13,26 +14,30 @@ from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 
+from drone_vla.config import LLMConfig
+from drone_vla.nlp.intent_parser import IntentParser
+from drone_vla.nlp.schemas import MissionCommand, MissionType
+
 logger = logging.getLogger(__name__)
 
 STATIC_DIR = Path(__file__).parent / "static"
-
-from drone_vla.config import LLMConfig
-from drone_vla.nlp.intent_parser import IntentParser
 
 app = FastAPI(title="Drone VLA Command Center")
 app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
 
 
 class SwarmBridge:
-    """Bridges the ROS2 SwarmManager to the web layer.
+    """Bridges NLP → Orchestrator → SwarmManager → Web UI.
 
-    When ROS2 is running, call set_swarm_manager() to connect live data.
-    Otherwise serves simulated telemetry for UI development.
+    Live mode: set_swarm_manager() + set_executor() to connect real PX4 telemetry
+    and execute commands end-to-end.
+    Sim mode: serves simulated telemetry for UI development.
     """
 
     def __init__(self):
         self._swarm = None
+        self._fleet = None
+        self._executor = None
         self._intent_parser = None
         self._logs: list[dict] = []
         self._max_logs = 500
@@ -41,8 +46,16 @@ class SwarmBridge:
     def set_swarm_manager(self, swarm):
         self._swarm = swarm
 
+    def set_executor(self, fleet, executor):
+        self._fleet = fleet
+        self._executor = executor
+
     def set_intent_parser(self, parser):
         self._intent_parser = parser
+
+    @property
+    def is_live(self) -> bool:
+        return self._swarm is not None
 
     def add_log(self, level: str, message: str, source: str = "system"):
         entry = {
@@ -74,35 +87,110 @@ class SwarmBridge:
     async def process_command(self, text: str) -> dict:
         self.add_log("info", f"Command received: {text}", "operator")
 
-        if self._intent_parser:
-            try:
-                intent = await self._intent_parser.aparse(
-                    text, self._get_fleet_state()
-                )
-                self.add_log(
-                    "info",
-                    f"Parsed {len(intent.commands)} command(s), "
-                    f"confidence: {intent.confidence:.0%}",
-                    "nlp",
-                )
-                if intent.clarification_needed:
-                    self.add_log(
-                        "warning",
-                        f"Clarification needed: {intent.clarification_needed}",
-                        "nlp",
-                    )
-                return {
-                    "status": "parsed",
-                    "commands": [c.model_dump() for c in intent.commands],
-                    "confidence": intent.confidence,
-                    "clarification": intent.clarification_needed,
-                }
-            except Exception as e:
-                self.add_log("error", f"Parse failed: {e}", "nlp")
-                return {"status": "error", "message": str(e)}
-        else:
+        if not self._intent_parser:
             self.add_log("warning", "NLP not connected — command logged only", "system")
             return {"status": "no_nlp", "message": "Intent parser not available"}
+
+        try:
+            intent = await self._intent_parser.aparse(text, self._get_fleet_state())
+            self.add_log(
+                "info",
+                f"Parsed {len(intent.commands)} command(s), "
+                f"confidence: {intent.confidence:.0%}",
+                "nlp",
+            )
+            if intent.clarification_needed:
+                self.add_log(
+                    "warning",
+                    f"Clarification needed: {intent.clarification_needed}",
+                    "nlp",
+                )
+
+            executed = []
+            if intent.commands and self._executor and self._swarm:
+                for cmd in intent.commands:
+                    result = await self._execute_command(cmd)
+                    executed.append(result)
+            elif intent.commands and not self._swarm:
+                self.add_log(
+                    "warning",
+                    "PX4 not connected — commands parsed but not executed",
+                    "system",
+                )
+
+            return {
+                "status": "executed" if executed else "parsed",
+                "commands": [c.model_dump() for c in intent.commands],
+                "confidence": intent.confidence,
+                "clarification": intent.clarification_needed,
+                "executed": executed,
+            }
+        except Exception as e:
+            self.add_log("error", f"Parse failed: {e}", "nlp")
+            return {"status": "error", "message": str(e)}
+
+    async def _execute_command(self, cmd: MissionCommand) -> dict:
+        """Dispatch a parsed command to the orchestrator → swarm pipeline."""
+        mt = cmd.mission_type
+
+        if mt == MissionType.LAND:
+            self._swarm.command_land()
+            drone_ids = cmd.assignment.drone_ids or [d.id for d in self._swarm.drones]
+            self.add_log("info", f"LAND: drones {drone_ids}", "executor")
+            return {"type": "land", "drones": drone_ids}
+
+        if mt == MissionType.RETURN_TO_HOME:
+            self._swarm.command_land()
+            drone_ids = cmd.assignment.drone_ids or [d.id for d in self._swarm.drones]
+            self.add_log("info", f"RTH: drones {drone_ids}", "executor")
+            return {"type": "rth", "drones": drone_ids}
+
+        if mt == MissionType.TAKEOFF:
+            self._swarm.command_takeoff()
+            drone_ids = cmd.assignment.drone_ids or [d.id for d in self._swarm.drones]
+            self.add_log("info", f"TAKEOFF: drones {drone_ids}", "executor")
+            return {"type": "takeoff", "drones": drone_ids}
+
+        try:
+            mission = await self._executor.execute_command(cmd)
+            if mission:
+                self.add_log(
+                    "info",
+                    f"Mission {mission.mission_id}: {mt.value} → "
+                    f"drones {mission.assigned_drones}, "
+                    f"{sum(len(w) for w in mission.waypoint_plans.values())} waypoints",
+                    "executor",
+                )
+                return {
+                    "type": mt.value,
+                    "mission_id": mission.mission_id,
+                    "drones": mission.assigned_drones,
+                    "waypoints": sum(len(w) for w in mission.waypoint_plans.values()),
+                }
+            else:
+                self.add_log("warning", f"No drones available for {mt.value}", "executor")
+                return {"type": mt.value, "error": "no drones available"}
+        except Exception as e:
+            self.add_log("error", f"Execution failed: {e}", "executor")
+            return {"type": mt.value, "error": str(e)}
+
+    def sync_fleet_telemetry(self):
+        """Push SwarmManager telemetry into FleetManager state."""
+        if not self._swarm or not self._fleet:
+            return
+        for t in self._swarm.get_telemetry():
+            drone_id = t["drone_id"]
+            if not self._fleet.get_drone(drone_id):
+                from drone_vla.orchestrator.fleet_manager import DroneStatus
+                self._fleet.register_drone(drone_id, status=DroneStatus.ARMED)
+            self._fleet.update_telemetry(
+                drone_id,
+                lat=t.get("lat", 0.0),
+                lon=t.get("lon", 0.0),
+                alt_m=t.get("alt_agl_m", 0.0),
+                heading_deg=math.degrees(t.get("heading_rad", 0.0)),
+                speed_ms=math.sqrt(t.get("vx", 0) ** 2 + t.get("vy", 0) ** 2),
+            )
 
     def _get_fleet_state(self) -> dict:
         return {
@@ -112,7 +200,6 @@ class SwarmBridge:
 
     def _sim_telemetry(self) -> list[dict]:
         t = time.time()
-        import math
         drones = []
         for i in range(1, 4):
             alt = 15.0 + (i - 1) * 5.0
@@ -147,6 +234,7 @@ class SwarmBridge:
 
     async def telemetry_loop(self):
         while True:
+            self.sync_fleet_telemetry()
             data = {
                 "type": "telemetry",
                 "data": {
@@ -172,7 +260,8 @@ async def startup():
         bridge.add_log("info", "NLP connected (Claude Haiku 4.5 via Bedrock)", "system")
     except Exception as e:
         bridge.add_log("warning", f"NLP init failed: {e}", "system")
-    bridge.add_log("info", "Command Center online", "system")
+    mode = "LIVE (PX4)" if bridge.is_live else "SIMULATED"
+    bridge.add_log("info", f"Command Center online — {mode} mode", "system")
 
 
 @app.get("/", response_class=HTMLResponse)
