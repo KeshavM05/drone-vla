@@ -73,7 +73,7 @@ flowchart TD
 
 ## Configuration
 
-All values in `src/drone_vla/config.py` under `CollisionAvoidanceConfig`:
+All values in `drone_vla/config.py` under `CollisionAvoidanceConfig`:
 
 | Parameter | Default | Description |
 |-----------|---------|-------------|
@@ -86,7 +86,7 @@ All values in `src/drone_vla/config.py` under `CollisionAvoidanceConfig`:
 
 ## Source Files
 
-- `src/drone_vla/flight/collision_avoidance.py` — CA logic
-- `src/drone_vla/flight/px4_drone.py` — Per-drone PX4 ROS2 controller
-- `src/drone_vla/flight/swarm_node.py` — Central node (runs CA + telemetry)
+- `drone_vla/flight/collision_avoidance.py` — CA logic
+- `drone_vla/flight/px4_drone.py` — Per-drone PX4 ROS2 controller
+- `drone_vla/flight/swarm_node.py` — Central node (runs CA + telemetry)
 - `scripts/test_collision_avoidance.py` — Integration test

@@ -8,7 +8,7 @@ tags:
 ---
 # Fleet Manager API
 
-The `FleetManager` class (`src/drone_vla/orchestrator/fleet_manager.py`) is the central registry for all drones in the swarm. It tracks state, allocates drones to missions, and handles automatic failover.
+The `FleetManager` class (`drone_vla/orchestrator/fleet_manager.py`) is the central registry for all drones in the swarm. It tracks state, allocates drones to missions, and handles automatic failover.
 
 ## DroneState
 

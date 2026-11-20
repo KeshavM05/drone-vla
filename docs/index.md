@@ -26,7 +26,7 @@ Setup and development guides.
 - [PX4 SITL Setup](./guides/px4-sitl-setup.md) — PX4 v1.16 multi-drone SITL with Gazebo + MicroXRCE-DDS + ROS2
 - [Command Center](./guides/command-center.md) — Mission control dashboard with NLP command input
 - [Disk Management](./guides/disk-management.md) — Preventing PX4 from filling the disk, cleanup procedures
-- [ArduPilot SITL Setup](./guides/ardupilot-sitl-setup.md) — Legacy (replaced by PX4)
+- [Command Center](./guides/command-center.md) — Web-based mission control dashboard
 
 ### [API Reference](./api/mission-schemas.md)
 Module-level documentation and data contracts.

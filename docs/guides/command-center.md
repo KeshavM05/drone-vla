@@ -88,7 +88,7 @@ The backend serves simulated telemetry when PX4 is not running, so the UI works 
 
 ## Source Files
 
-- `src/drone_vla/web/app.py` — FastAPI backend + WebSocket bridge
-- `src/drone_vla/web/static/index.html` — Single-page dashboard
-- `src/drone_vla/nlp/intent_parser.py` — Claude Bedrock NLP
+- `drone_vla/web/app.py` — FastAPI backend + WebSocket bridge
+- `drone_vla/web/static/index.html` — Single-page dashboard
+- `drone_vla/nlp/intent_parser.py` — Claude Bedrock NLP
 - `scripts/start_command_center.py` — Launcher script

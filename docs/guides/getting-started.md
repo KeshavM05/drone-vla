@@ -10,7 +10,7 @@ tags:
 ## Prerequisites
 
 - **Python 3.10+** with pip
-- **Docker Desktop** (for ArduPilot SITL + Gazebo) or native ArduPilot SITL install
+- **PX4 v1.16** built from source (see [PX4 SITL Setup](./px4-sitl-setup.md))
 - **Node.js 24+** (for OpenKnowledge docs — use `fnm use 24`)
 - **AWS credentials** configured for Bedrock access (`aws configure` or env vars)
 - **Microphone** (optional — text mode works without one)
@@ -39,9 +39,9 @@ Or use an AWS profile:
 export AWS_PROFILE=your-profile
 ```
 
-### 3. Start ArduPilot SITL simulation
+### 3. Start PX4 SITL simulation
 
-See [ArduPilot SITL Setup](./ardupilot-sitl-setup.md) for detailed instructions.
+See [PX4 SITL Setup](./px4-sitl-setup.md) for detailed instructions.
 
 **Quick Docker start:**
 ```bash
@@ -56,7 +56,7 @@ drone-vla --text
 
 You should see:
 ```
-Connecting to 3 ArduPilot SITL instances...
+Connecting to 3 PX4 SITL instances...
 All drones connected. Text mode ready.
 Type commands (Ctrl+C to exit):
 

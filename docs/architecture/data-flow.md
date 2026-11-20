@@ -86,7 +86,7 @@ The `PathPlanner.plan_formation()` computes GPS positions for each drone in a tr
 
 ### Step 5: Waypoint Execution
 
-The `MissionExecutor` dispatches waypoints to each drone through the `MAVLinkBridge`. Each `Drone` object calls `goto_location()` via MAVSDK and waits for position convergence within an acceptance radius (default 2m).
+The `MissionExecutor` dispatches waypoints to each drone through the `SwarmManager`. Each `PX4Drone` receives trajectory setpoints via ROS2 px4_msgs and the collision avoidance layer ensures altitude deconfliction and separation monitoring.
 
 ### Step 6: Continuous Telemetry
 

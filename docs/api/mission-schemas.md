@@ -8,7 +8,7 @@ tags:
 ---
 # Mission Schemas
 
-All mission data flows through Pydantic v2 models defined in `src/drone_vla/nlp/schemas.py`. These models are the structured contract between the [intent parser](./fleet-manager.md) and the [swarm orchestrator](../architecture/system-overview.md).
+All mission data flows through Pydantic v2 models defined in `drone_vla/nlp/schemas.py`. These models are the structured contract between the [intent parser](./fleet-manager.md) and the [swarm orchestrator](../architecture/system-overview.md).
 
 ## Core Models
 
