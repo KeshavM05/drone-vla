@@ -15,6 +15,7 @@ Documentation hub for the Drone VLA project: a system that lets a single operato
 System design, tier breakdown, and design decisions.
 
 - [System Overview](./architecture/system-overview.md) — 4-tier pipeline from voice to flight
+- [Collision Avoidance](./architecture/collision-avoidance.md) — Altitude layering, separation monitoring, reactive avoidance
 - [Data Flow](./architecture/data-flow.md) — How a spoken command becomes coordinated drone movement
 
 ### [Guides](./guides/getting-started.md)
