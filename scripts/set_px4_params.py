@@ -10,6 +10,7 @@ PARAMS = {
     "NAV_DLL_ACT": 0,
     "CBRK_SUPPLY_CHK": 894281,
     "SYS_HAS_MAG": 0,
+    "SDLOG_MODE": -1,
 }
 
 

@@ -26,6 +26,10 @@ pkill -f "gz sim" 2>/dev/null || true
 pkill -f MicroXRCEAgent 2>/dev/null || true
 sleep 2
 
+echo "=== Clearing old PX4 flight logs ==="
+rm -rf "$PX4_DIR"/build/px4_sitl_default/rootfs/*/log/ \
+       "$PX4_DIR"/build/px4_sitl_default/rootfs/log/ 2>/dev/null || true
+
 cd "$PX4_DIR"
 
 echo "=== Starting PX4 ${NUM_DRONES}-drone swarm ==="
