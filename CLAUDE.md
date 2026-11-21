@@ -106,10 +106,12 @@ This machine has a 149 GB partition that fills up fast. Every agent working in t
 
 ### PX4 SITL writes flight logs that eat disk
 - PX4 writes `.ulg` logs continuously to `~/PX4-Autopilot/build/px4_sitl_default/rootfs/*/log/`
+- PX4 stdout was redirected to `/tmp/px4_drone*.log` which grew to 11GB+ each — **now redirected to /dev/null**
 - 3 idle drones = 27+ GB in hours. **Always kill PX4 when done:**
   ```
   pkill -f "px4.*-i [0-9]"; pkill -f "gz sim"; pkill -f MicroXRCEAgent
   ```
+- **Quick cleanup**: `bash ~/drone-vla/scripts/cleanup_disk.sh` — kills processes, deletes all PX4/Gazebo temp files, clears Chrome cache
 - The start script (`scripts/start_px4_swarm.sh`) clears old logs automatically on launch
 - `scripts/set_px4_params.py` disables logging (`SDLOG_MODE=-1`) but only takes effect after PX4 boots
 

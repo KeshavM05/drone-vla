@@ -28,9 +28,10 @@ pkill -f "gz sim" 2>/dev/null || true
 pkill -f MicroXRCEAgent 2>/dev/null || true
 sleep 2
 
-echo "=== Clearing old PX4 flight logs ==="
+echo "=== Clearing old PX4 logs ==="
 rm -rf "$PX4_DIR"/build/px4_sitl_default/rootfs/*/log/ \
        "$PX4_DIR"/build/px4_sitl_default/rootfs/log/ 2>/dev/null || true
+rm -f /tmp/px4_drone*.log /tmp/px4_cam*.log /tmp/px4_swarm_startup.log /tmp/xrce_agent.log 2>/dev/null || true
 
 cd "$PX4_DIR"
 
@@ -38,7 +39,7 @@ echo "=== Starting PX4 ${NUM_DRONES}-drone swarm ==="
 
 echo "Starting drone 1 (starts Gazebo, model: ${PX4_MODEL})..."
 PX4_SYS_AUTOSTART=4001 PX4_SIM_MODEL="${PX4_MODEL}" \
-    ./build/px4_sitl_default/bin/px4 -i 1 > /tmp/px4_drone1.log 2>&1 &
+    ./build/px4_sitl_default/bin/px4 -i 1 > /dev/null 2>&1 &
 PIDS+=($!)
 echo "  PID: ${PIDS[-1]}"
 
@@ -64,7 +65,7 @@ for i in $(seq 2 "$NUM_DRONES"); do
 
     PX4_GZ_STANDALONE=1 PX4_SYS_AUTOSTART=4001 \
         PX4_GZ_MODEL_NAME="${GZ_MODEL_BASE}_${i}" \
-        ./build/px4_sitl_default/bin/px4 -i "$i" > "/tmp/px4_drone${i}.log" 2>&1 &
+        ./build/px4_sitl_default/bin/px4 -i "$i" > /dev/null 2>&1 &
     PIDS+=($!)
     echo "  PID: ${PIDS[-1]}"
     sleep 8
@@ -72,7 +73,7 @@ done
 
 echo ""
 echo "=== Starting MicroXRCEAgent ==="
-MicroXRCEAgent udp4 -p 8888 > /tmp/xrce_agent.log 2>&1 &
+MicroXRCEAgent udp4 -p 8888 > /dev/null 2>&1 &
 PIDS+=($!)
 echo "  PID: ${PIDS[-1]}"
 sleep 3
@@ -92,7 +93,7 @@ for i in $(seq 1 "$NUM_DRONES"); do
 done
 echo ""
 echo " MicroXRCEAgent: UDP port 8888"
-echo " Logs: /tmp/px4_drone{1..${NUM_DRONES}}.log"
+echo " PX4 stdout: /dev/null (SDLOG_MODE=-1 disables .ulg too)"
 echo "=========================================="
 echo ""
 echo "Press Ctrl+C to stop all instances"
