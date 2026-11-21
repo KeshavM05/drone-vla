@@ -27,6 +27,15 @@ For each session, add an entry at the top (newest first):
 
 ---
 
+## Nov 21, 2026 - Day 4 (Session 1)
+
+**Plan:** Fix disk space crisis (PX4 stdout logs filled disk to 0 bytes free)
+**Actual:** Found 22 GB of PX4 stdout logs in `/tmp/px4_drone{1,3}.log` (11 GB each) plus 727 MB of camera test logs. No PX4/Gazebo processes running (crashed or killed when disk hit 0). Deleted all temp files, cleared Chrome cache — freed 24 GB (93% → 76%, 35 GB free). Root-caused to `start_px4_swarm.sh` redirecting PX4 stdout to `/tmp/*.log` with no size limit. Fixed by redirecting to `/dev/null`. Created `scripts/cleanup_disk.sh` one-command emergency cleanup script. Updated CLAUDE.md and disk-management docs.
+**Blocked by:** Disk at 0 bytes prevented Claude from starting. Had to recover some space before session could begin.
+**Decision:** PX4 stdout goes to `/dev/null` — we don't need it (useful diagnostics are in ROS2 topics and set_px4_params.py output). Emergency cleanup script avoids having to remember the multi-step manual process.
+**Next:** Camera feed in Command Center, Whisper STT backend.
+**Hours:** 0.5h
+
 ## Nov 20, 2026 - Day 3 (Session 2)
 
 **Plan:** Wire end-to-end command execution pipeline (NLP → orchestrator → swarm → PX4)

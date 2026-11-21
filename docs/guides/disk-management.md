@@ -13,15 +13,18 @@ This dev machine has a 149 GB partition. PX4 SITL simulation and build artifacts
 
 ## The PX4 Log Problem
 
-PX4 SITL continuously writes `.ulg` flight logs to:
+PX4 SITL generates two types of disk-eating output:
 
-```
-~/PX4-Autopilot/build/px4_sitl_default/rootfs/log/
-~/PX4-Autopilot/build/px4_sitl_default/rootfs/2/log/
-~/PX4-Autopilot/build/px4_sitl_default/rootfs/3/log/
-```
+1. **`.ulg` flight logs** written to `~/PX4-Autopilot/build/px4_sitl_default/rootfs/*/log/` — hundreds of MB per hour per drone
+2. **stdout logs** — the start script previously redirected PX4 stdout to `/tmp/px4_drone*.log`, which grew to **11 GB each** (22 GB total for 3 drones)
 
-With 3 drones running, this generates hundreds of MB per hour. On 2026-11-19, 3 idle PX4 instances consumed **27+ GB** over 7.5 hours and completely filled the disk.
+On 2026-11-19, .ulg logs consumed **27+ GB** in 7.5 hours. On 2026-11-21, stdout logs consumed **22+ GB**. Both incidents filled the disk completely.
+
+### Fix applied (2026-11-21)
+
+- `start_px4_swarm.sh` now redirects PX4/MicroXRCE stdout to `/dev/null` instead of `/tmp/*.log`
+- Start script clears old `/tmp/px4_*.log` files on launch
+- `cleanup_disk.sh` added for one-command emergency cleanup
 
 ### Why deleting files doesn't free space
 
@@ -38,6 +41,10 @@ This means:
 
 ## Cleanup Procedure
 
+One-liner: `bash ~/drone-vla/scripts/cleanup_disk.sh` — kills processes, deletes all PX4/Gazebo temp files, clears Chrome cache, and reports disk before/after.
+
+Manual steps:
+
 ```bash
 # 1. Kill PX4 + Gazebo + XRCE Agent
 pkill -f "px4.*-i [0-9]"
@@ -45,9 +52,10 @@ pkill -f "gz sim"
 pkill -f MicroXRCEAgent
 sleep 2
 
-# 2. Clear PX4 flight logs
+# 2. Clear PX4 flight logs and stdout logs
 rm -rf ~/PX4-Autopilot/build/px4_sitl_default/rootfs/*/log/
 rm -rf ~/PX4-Autopilot/build/px4_sitl_default/rootfs/log/
+rm -f /tmp/px4_drone*.log /tmp/px4_cam*.log /tmp/xrce_agent.log
 
 # 3. Verify
 df -h /
@@ -55,8 +63,9 @@ df -h /
 
 ## Mitigations in Place
 
-- **`scripts/start_px4_swarm.sh`** clears old logs on every launch (see [PX4 SITL Setup](./px4-sitl-setup.md))
-- **`scripts/set_px4_params.py`** sets `SDLOG_MODE=-1` to disable logging after PX4 boots
+- **`scripts/start_px4_swarm.sh`** clears old logs on launch, redirects PX4 stdout to `/dev/null` (see [PX4 SITL Setup](./px4-sitl-setup.md))
+- **`scripts/cleanup_disk.sh`** one-command emergency cleanup: kills processes, deletes all temp/log files, clears Chrome cache
+- **`scripts/set_px4_params.py`** sets `SDLOG_MODE=-1` to disable .ulg logging after PX4 boots
 - **`.gitignore`** excludes `ros2_ws/`, `terrain/`, and `*.log` from the repo
 
 ## What's Eating Disk
