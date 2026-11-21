@@ -24,12 +24,37 @@ from drone_vla.orchestrator.mission_executor import MissionExecutor
 from drone_vla.orchestrator.path_planner import Waypoint
 
 
-def start_live_mode(config, num_drones=3):
+def discover_camera_topics(num_drones: int) -> dict[int, str]:
+    """Find camera image topics from ROS2 topic list."""
+    import subprocess
+
+    result = subprocess.run(
+        ["ros2", "topic", "list"], capture_output=True, text=True, timeout=5
+    )
+    topics = result.stdout.strip().split("\n") if result.returncode == 0 else []
+    camera_topics = [t for t in topics if "imager/image" in t and "sensor_msgs" not in t]
+
+    mapping: dict[int, str] = {}
+    for topic in camera_topics:
+        for drone_id in range(1, num_drones + 1):
+            if f"_{drone_id}/" in topic or (drone_id == 1 and f"cam_45/" in topic):
+                mapping[drone_id] = topic
+                break
+        else:
+            if len(mapping) < num_drones:
+                next_id = len(mapping) + 1
+                mapping[next_id] = topic
+
+    return mapping
+
+
+def start_live_mode(config, num_drones=3, camera_topics=None):
     """Wire ROS2 SwarmManager → FleetManager → MissionExecutor → Web bridge."""
     import rclpy
     from drone_vla.flight.swarm_node import SwarmManager
     from drone_vla.flight.collision_avoidance import CAConfig
     from drone_vla.web.app import bridge
+    from drone_vla.web.camera import CameraManager
 
     rclpy.init()
 
@@ -66,6 +91,13 @@ def start_live_mode(config, num_drones=3):
     bridge.set_swarm_manager(swarm)
     bridge.set_executor(fleet, executor)
 
+    cam = CameraManager()
+    if not camera_topics:
+        camera_topics = discover_camera_topics(num_drones)
+    for drone_id, topic in camera_topics.items():
+        cam.subscribe(swarm, drone_id, topic)
+    bridge.set_camera_manager(cam)
+
     def spin_ros2():
         rclpy.spin(swarm)
 
@@ -75,6 +107,10 @@ def start_live_mode(config, num_drones=3):
     print(f"  ROS2 SwarmManager: {num_drones} drones")
     print(f"  Altitude layers: {ca_config.altitude_base_m}m + {ca_config.altitude_layer_m}m/drone")
     print(f"  Home: ({config.simulation.home_lat}, {config.simulation.home_lon})")
+    if camera_topics:
+        print(f"  Cameras: {list(camera_topics.keys())}")
+    else:
+        print(f"  Cameras: none found (start ros_gz_image bridge)")
     return swarm
 
 

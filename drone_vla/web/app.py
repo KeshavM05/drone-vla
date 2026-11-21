@@ -11,7 +11,7 @@ from pathlib import Path
 from typing import Optional
 
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
-from fastapi.responses import HTMLResponse, JSONResponse
+from fastapi.responses import HTMLResponse, JSONResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 
 from drone_vla.config import LLMConfig
@@ -39,6 +39,7 @@ class SwarmBridge:
         self._fleet = None
         self._executor = None
         self._intent_parser = None
+        self._camera = None
         self._logs: list[dict] = []
         self._max_logs = 500
         self._ws_clients: set[WebSocket] = set()
@@ -49,6 +50,9 @@ class SwarmBridge:
     def set_executor(self, fleet, executor):
         self._fleet = fleet
         self._executor = executor
+
+    def set_camera_manager(self, cam):
+        self._camera = cam
 
     def set_intent_parser(self, parser):
         self._intent_parser = parser
@@ -303,6 +307,32 @@ async def api_logs(limit: int = 100):
 async def api_command(body: dict):
     result = await bridge.process_command(body.get("text", ""))
     return JSONResponse(result)
+
+
+@app.get("/camera/{drone_id}")
+async def camera_stream(drone_id: int):
+    async def generate():
+        while True:
+            if bridge._camera:
+                frame = bridge._camera.get_frame(drone_id)
+                if frame:
+                    yield (
+                        b"--frame\r\n"
+                        b"Content-Type: image/jpeg\r\n\r\n" + frame + b"\r\n"
+                    )
+            await asyncio.sleep(0.1)
+
+    return StreamingResponse(
+        generate(),
+        media_type="multipart/x-mixed-replace; boundary=frame",
+    )
+
+
+@app.get("/api/cameras")
+async def api_cameras():
+    if bridge._camera:
+        return JSONResponse({"cameras": bridge._camera.get_active_cameras()})
+    return JSONResponse({"cameras": []})
 
 
 def run(host: str = "0.0.0.0", port: int = 8080):

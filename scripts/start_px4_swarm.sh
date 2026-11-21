@@ -83,6 +83,22 @@ echo "=== Setting params to disable preflight checks ==="
 python3 "$HOME/drone-vla/scripts/set_px4_params.py" 2>&1 || true
 
 echo ""
+echo "=== Starting camera image bridges ==="
+# Discover Gazebo world name and start ros_gz_image bridges for each drone camera
+GZ_WORLD=$(gz topic -l 2>/dev/null | grep -oP '/world/\K[^/]+' | head -1)
+GZ_WORLD=${GZ_WORLD:-default}
+CAM_COUNT=0
+for CAM_TOPIC in $(gz topic -l 2>/dev/null | grep "imager/image$"); do
+    echo "  Bridge: $CAM_TOPIC"
+    ros2 run ros_gz_image image_bridge "$CAM_TOPIC" > /dev/null 2>&1 &
+    PIDS+=($!)
+    CAM_COUNT=$((CAM_COUNT + 1))
+done
+if [ "$CAM_COUNT" -eq 0 ]; then
+    echo "  No camera topics found (model may not have camera sensor)"
+fi
+
+echo ""
 echo "=========================================="
 echo " ${NUM_DRONES}-drone PX4 swarm running"
 echo " Model: ${PX4_MODEL}"
@@ -93,6 +109,7 @@ for i in $(seq 1 "$NUM_DRONES"); do
 done
 echo ""
 echo " MicroXRCEAgent: UDP port 8888"
+echo " Camera bridges: $CAM_COUNT"
 echo " PX4 stdout: /dev/null (SDLOG_MODE=-1 disables .ulg too)"
 echo "=========================================="
 echo ""

@@ -314,28 +314,85 @@ body {
   position: absolute;
   top: 12px;
   right: 12px;
-  width: 240px;
-  height: 180px;
+  width: 320px;
+  height: 240px;
   background: #000;
   border: 1px solid var(--border);
   border-radius: 6px;
   overflow: hidden;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.camera-overlay.expanded {
+  width: 640px;
+  height: 480px;
+}
+
+.camera-overlay .cam-header {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 4px 8px;
+  background: linear-gradient(rgba(0,0,0,0.7), transparent);
+  z-index: 2;
 }
 
 .camera-overlay .cam-label {
-  position: absolute;
-  top: 4px;
-  left: 8px;
   font-size: 10px;
   text-transform: uppercase;
   color: var(--green);
   font-weight: 600;
-  text-shadow: 0 0 4px rgba(0,0,0,0.8);
 }
 
-.camera-overlay canvas {
+.camera-overlay .cam-label.no-signal {
+  color: var(--muted);
+}
+
+.camera-overlay .cam-controls {
+  display: flex;
+  gap: 4px;
+}
+
+.camera-overlay .cam-btn {
+  background: rgba(255,255,255,0.15);
+  border: none;
+  color: var(--text);
+  font-size: 10px;
+  padding: 2px 6px;
+  border-radius: 3px;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.camera-overlay .cam-btn:hover {
+  background: rgba(255,255,255,0.25);
+}
+
+.camera-overlay .cam-btn.active {
+  background: var(--accent);
+}
+
+.camera-overlay img {
   width: 100%;
   height: 100%;
+  object-fit: contain;
+  display: block;
+}
+
+.camera-overlay .no-signal-msg {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: var(--muted);
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 2px;
 }
 
 /* Scrollbar */
@@ -370,9 +427,13 @@ body {
   <div class="main-view">
     <canvas class="map-canvas" id="mapCanvas"></canvas>
     <div class="map-overlay" id="mapOverlay">LOCAL NED — Grid: 10m</div>
-    <div class="camera-overlay" id="cameraOverlay" style="display:none;">
-      <span class="cam-label" id="camLabel">CAM 1</span>
-      <canvas id="camCanvas"></canvas>
+    <div class="camera-overlay" id="cameraOverlay">
+      <div class="cam-header">
+        <span class="cam-label no-signal" id="camLabel">NO SIGNAL</span>
+        <div class="cam-controls" id="camControls"></div>
+      </div>
+      <img id="camFeed" style="display:none;" alt="Camera feed">
+      <div class="no-signal-msg" id="noSignalMsg">NO SIGNAL</div>
     </div>
   </div>
 
@@ -483,6 +544,9 @@ function renderDroneCards() {
 function selectDrone(id) {
   selectedDrone = selectedDrone === id ? null : id;
   renderDroneCards();
+  if (selectedDrone && activeCameras.includes(selectedDrone)) {
+    switchCamera(selectedDrone);
+  }
 }
 
 // --- Alerts ---
@@ -718,10 +782,66 @@ function updateClock() {
   setTimeout(updateClock, 1000);
 }
 
+// --- Camera Feed ---
+let activeCameras = [];
+let currentCamera = null;
+
+function switchCamera(droneId) {
+  currentCamera = droneId;
+  const feed = document.getElementById('camFeed');
+  const noSignal = document.getElementById('noSignalMsg');
+  const label = document.getElementById('camLabel');
+
+  feed.src = `/camera/${droneId}`;
+  feed.style.display = 'block';
+  noSignal.style.display = 'none';
+  label.textContent = `CAM ${droneId}`;
+  label.className = 'cam-label';
+
+  renderCamControls();
+}
+
+function renderCamControls() {
+  const container = document.getElementById('camControls');
+  const expandBtn = `<button class="cam-btn" onclick="toggleCamSize(event)" title="Toggle size">&#x26F6;</button>`;
+  const camBtns = activeCameras.map(id =>
+    `<button class="cam-btn ${currentCamera === id ? 'active' : ''}"
+             onclick="switchCamera(${id}); event.stopPropagation();">${id}</button>`
+  ).join('');
+  container.innerHTML = camBtns + expandBtn;
+}
+
+function toggleCamSize(e) {
+  e.stopPropagation();
+  document.getElementById('cameraOverlay').classList.toggle('expanded');
+}
+
+function pollCameras() {
+  fetch('/api/cameras')
+    .then(r => r.json())
+    .then(data => {
+      const prev = activeCameras.length;
+      activeCameras = data.cameras || [];
+      if (activeCameras.length > 0 && !currentCamera) {
+        switchCamera(activeCameras[0]);
+      }
+      if (activeCameras.length !== prev) {
+        renderCamControls();
+      }
+    })
+    .catch(() => {});
+  setTimeout(pollCameras, 3000);
+}
+
+document.getElementById('cameraOverlay').addEventListener('click', () => {
+  toggleCamSize({stopPropagation: () => {}});
+});
+
 // --- Init ---
 connectWS();
 drawMap();
 updateClock();
+pollCameras();
 </script>
 </body>
 </html>
