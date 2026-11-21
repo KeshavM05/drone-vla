@@ -48,7 +48,7 @@ Last updated: 2026-11-20
 | Feature | Source | Priority | Notes |
 |---------|--------|----------|-------|
 | End-to-end command execution | (T) | **P0** | Type command → drones move in Gazebo |
-| Camera feed in command center | (K) | **P0** | Live MJPEG/WebSocket stream from drone cameras |
+| Camera feed in command center | (K) | Done | MJPEG stream from ros_gz_image → CameraManager → `/camera/{id}` |
 | Telemetry terminal display | (T) | P1 | Live-updating fleet state in terminal (debugging) |
 | Whisper STT backend | (K) | P1 | faster-whisper for reliable voice, not browser-only |
 | Operator HUD polish | (K) | P1 | Better map (Leaflet?), camera feed panel, mission timeline |

@@ -100,6 +100,24 @@ flowchart LR
 
 The `SwarmBridge` in `app.py` holds references to all pipeline components. In simulated mode it serves fake telemetry and parses commands without executing. In live mode (`--live`), it wires NLP → MissionExecutor → SwarmManager for full end-to-end command execution.
 
+## Camera Feed
+
+When running in **live mode** with camera-equipped drone models (e.g., `x500_mono_cam_45`), the Command Center streams live camera feeds from the drones.
+
+### How it works
+
+1. `start_px4_swarm.sh` discovers Gazebo camera topics and starts `ros_gz_image` bridges
+2. `start_command_center.py --live` discovers ROS2 image topics and subscribes via `CameraManager`
+3. Frames are JPEG-encoded and served as MJPEG streams at `/camera/{drone_id}`
+4. The UI auto-detects active cameras and shows the feed in the top-right overlay
+
+### Camera panel
+
+- Click a drone card to switch which camera is shown
+- Click the camera overlay to toggle between small (320x240) and large (640x480)
+- Numbered buttons in the overlay header switch between drones
+- "NO SIGNAL" shown when no camera data is available (sim mode or bridge not running)
+
 ## API Endpoints
 
 | Endpoint | Method | Description |
@@ -109,10 +127,13 @@ The `SwarmBridge` in `app.py` holds references to all pipeline components. In si
 | `/api/telemetry` | GET | Current drone states |
 | `/api/logs` | GET | Recent event log entries |
 | `/api/command` | POST | Submit a text command for NLP parsing |
+| `/camera/{drone_id}` | GET | MJPEG camera stream for a drone |
+| `/api/cameras` | GET | List of drone IDs with active cameras |
 
 ## Source Files
 
-- `drone_vla/web/app.py` — FastAPI backend + WebSocket bridge
+- `drone_vla/web/app.py` — FastAPI backend + WebSocket bridge + MJPEG streaming
+- `drone_vla/web/camera.py` — CameraManager: ROS2 image subscription → JPEG frames
 - `drone_vla/web/static/index.html` — Single-page dashboard
 - `drone_vla/nlp/intent_parser.py` — Claude Bedrock NLP
-- `scripts/start_command_center.py` — Launcher script
+- `scripts/start_command_center.py` — Launcher script (camera topic discovery)

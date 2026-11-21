@@ -33,6 +33,7 @@ Last updated: 2026-11-20 (Day 3, E2E verified)
 - Two modes: `--live` (PX4 connected, commands execute) or simulated (UI dev)
 - Shows 3 drone cards with live telemetry from PX4
 - 2D map with drone positions, headings, velocity vectors
+- **Camera feed overlay**: live MJPEG stream from drone cameras, switchable per drone, resizable
 - NLP command input: type a sentence, Claude parses and executes it
 - Voice input via browser Web Speech API
 - Event log with color-coded sources
@@ -62,7 +63,6 @@ Last updated: 2026-11-20 (Day 3, E2E verified)
 
 ## What Doesn't Exist Yet
 
-- Camera feed in command center
 - Whisper STT backend
 - Geofencing
 - Emergency stop
