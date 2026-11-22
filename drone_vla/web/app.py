@@ -320,7 +320,7 @@ async def camera_stream(drone_id: int):
                         b"--frame\r\n"
                         b"Content-Type: image/jpeg\r\n\r\n" + frame + b"\r\n"
                     )
-            await asyncio.sleep(0.1)
+            await asyncio.sleep(0.25)
 
     return StreamingResponse(
         generate(),

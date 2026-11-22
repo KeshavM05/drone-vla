@@ -106,7 +106,7 @@ This machine has a 149 GB partition that fills up fast. Every agent working in t
 
 ### PX4 SITL writes flight logs that eat disk
 - PX4 writes `.ulg` logs continuously to `~/PX4-Autopilot/build/px4_sitl_default/rootfs/*/log/`
-- PX4 stdout was redirected to `/tmp/px4_drone*.log` which grew to 11GB+ each — **now redirected to /dev/null**
+- PX4 stdout is redirected to `/dev/null` in the start script (was `/tmp/px4_drone*.log` which grew to 11GB+ each)
 - 3 idle drones = 27+ GB in hours. **Always kill PX4 when done:**
   ```
   pkill -f "px4.*-i [0-9]"; pkill -f "gz sim"; pkill -f MicroXRCEAgent

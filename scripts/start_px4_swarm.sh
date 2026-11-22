@@ -46,12 +46,13 @@ echo "  PID: ${PIDS[-1]}"
 echo "Waiting 20s for Gazebo + first drone..."
 sleep 20
 
-# Derive Gazebo model name from PX4_SIM_MODEL (strip gz_ prefix)
+# Derive Gazebo model names — drone 1 gets camera, others use lightweight x500
 GZ_MODEL_BASE="${PX4_MODEL#gz_}"
+GZ_MODEL_LIGHT="x500"
 
 for i in $(seq 2 "$NUM_DRONES"); do
     POSE_Y=$(( (i - 1) * 3 ))
-    echo "Starting drone $i (pose: 0,${POSE_Y}, model: ${GZ_MODEL_BASE})..."
+    echo "Starting drone $i (pose: 0,${POSE_Y}, model: ${GZ_MODEL_LIGHT})..."
 
     GZ_WORLD=$(gz topic -l 2>/dev/null | grep -oP '/world/\K[^/]+' | head -1)
     GZ_WORLD=${GZ_WORLD:-default}
@@ -60,11 +61,11 @@ for i in $(seq 2 "$NUM_DRONES"); do
         --reqtype gz.msgs.EntityFactory \
         --reptype gz.msgs.Boolean \
         --timeout 5000 \
-        --req "sdf_filename: \"${GZ_MODEL_BASE}/model.sdf\", name: \"${GZ_MODEL_BASE}_${i}\", pose: {position: {y: ${POSE_Y}}}" \
+        --req "sdf_filename: \"${GZ_MODEL_LIGHT}/model.sdf\", name: \"${GZ_MODEL_LIGHT}_${i}\", pose: {position: {y: ${POSE_Y}}}" \
         2>/dev/null || echo "  (model spawn via gz service failed, trying PX4 auto-spawn)"
 
     PX4_GZ_STANDALONE=1 PX4_SYS_AUTOSTART=4001 \
-        PX4_GZ_MODEL_NAME="${GZ_MODEL_BASE}_${i}" \
+        PX4_GZ_MODEL_NAME="${GZ_MODEL_LIGHT}_${i}" \
         ./build/px4_sitl_default/bin/px4 -i "$i" > /dev/null 2>&1 &
     PIDS+=($!)
     echo "  PID: ${PIDS[-1]}"
