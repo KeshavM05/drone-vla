@@ -8,24 +8,24 @@ tags:
 ---
 # Current System Status
 
-Last updated: 2026-11-20 (Day 3, E2E verified)
+Last updated: 2026-11-21 (Day 3, camera optimized)
 
 ## Recent Changes
 
-- **End-to-end command pipeline wired** — NLP → FleetManager → MissionExecutor → SwarmManager
-- `start_command_center.py --live` mode connects ROS2 SwarmManager with full execution
-- LAND/RTH/TAKEOFF dispatch directly to SwarmManager; complex missions route through PathPlanner
-- FleetManager syncs telemetry from PX4 on every tick for allocation decisions
-- `altitude_agl_m` validation fixed (`ge=1.0` → `ge=0.0`) for land commands
+- **Camera feed optimized**: 1-camera config (drone 1 = camera, drones 2-3 = lightweight x500)
+- Frames downscaled 1280x960 → 480x360, JPEG quality 50, throttled to 4fps
+- PX4 stdout redirected to /dev/null, cleanup script + bash aliases added
+- Build-in-public content log started (demos/build-in-public-log.md)
+- End-to-end command pipeline wired: NLP → FleetManager → MissionExecutor → SwarmManager
 - Flattened `src/drone_vla/` → `drone_vla/` at project root
-- Nuked all ArduPilot/MAVSDK code, project fully self-contained with px4_msgs
 
 ## What Works Right Now
 
 ### Simulation
 - 3-drone PX4 SITL swarm launches with one script
 - Drones arm, take off, fly triangle formation, land
-- 45-degree camera on drone 1, images bridge to ROS2 at 4-9 Hz
+- 45-degree camera on drone 1 only (drones 2-3 use lightweight x500 for performance)
+- Camera frames: 480x360 JPEG @ quality 50, throttled to 4fps max
 - Collision avoidance enforces altitude layers (D1=15m, D2=20m, D3=25m)
 
 ### Command Center

@@ -108,8 +108,12 @@ When running in **live mode** with camera-equipped drone models (e.g., `x500_mon
 
 1. `start_px4_swarm.sh` discovers Gazebo camera topics and starts `ros_gz_image` bridges
 2. `start_command_center.py --live` discovers ROS2 image topics and subscribes via `CameraManager`
-3. Frames are JPEG-encoded and served as MJPEG streams at `/camera/{drone_id}`
+3. Frames are downscaled (480x360), JPEG-encoded (quality 50), throttled (4fps max), and served as MJPEG streams at `/camera/{drone_id}`
 4. The UI auto-detects active cameras and shows the feed in the top-right overlay
+
+### Performance
+
+By default, only drone 1 uses the camera model (`x500_mono_cam_45`). Drones 2-3 use lightweight `x500` (no camera) to reduce Gazebo rendering load. 3 cameras at full resolution overwhelmed local GPU — plan is to move to AWS EC2 GPU instance (g5.xlarge) for multi-camera support.
 
 ### Camera panel
 

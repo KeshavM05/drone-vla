@@ -27,6 +27,15 @@ For each session, add an entry at the top (newest first):
 
 ---
 
+## Nov 21, 2026 - Day 4 (Session 2)
+
+**Plan:** Optimize camera performance and test 1-camera config
+**Actual:** Built full camera pipeline (Gazebo → ros_gz_image → CameraManager → MJPEG → browser). 3 cameras overwhelmed local GPU. Optimized: downscale 1280x960 → 480x360, JPEG quality 50, throttle to 4fps. Switched to 1-camera config (drone 1 = x500_mono_cam_45, drones 2-3 = x500). Camera feed overlay in Command Center: switchable per drone, click to resize. Created Day 3 demo artifact and build-in-public content log for LinkedIn/Twitter.
+**Blocked by:** 3 camera viewpoints made Gazebo choppy on local GPU. Timing issue: Command Center started before ros_gz_image bridge was registered in ROS2 DDS, causing empty camera discovery.
+**Decision:** 1-camera config as interim — only drone 1 gets camera model. Plan to move sim to AWS EC2 GPU instance (g5.xlarge, $25K credits available) for multi-camera. Stream sleep increased to 250ms to match throttled frame rate.
+**Next:** Whisper STT backend, AWS EC2 GPU setup.
+**Hours:** 2h
+
 ## Nov 21, 2026 - Day 4 (Session 1)
 
 **Plan:** Fix disk space crisis (PX4 stdout logs filled disk to 0 bytes free)
