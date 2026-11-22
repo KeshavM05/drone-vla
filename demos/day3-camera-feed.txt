@@ -1,0 +1,47 @@
+============================================
+  DRONE VLA — CAMERA FEED IN COMMAND CENTER
+  Day 3: Live Camera Streaming
+  Date: 2026-11-21
+============================================
+
+Stack: PX4 v1.16 SITL + Gazebo Harmonic + ROS2 Humble + Claude Bedrock + FastAPI
+
+What's new today:
+  - Live camera feed from Gazebo drone cameras → web dashboard
+  - 3 cameras streaming simultaneously (all drones had x500_mono_cam_45)
+  - MJPEG streaming: Gazebo → ros_gz_image bridge → ROS2 → CameraManager → /camera/{id}
+  - Camera overlay in Command Center: switchable per drone, resizable
+  - Auto-discovery of camera topics (no hardcoded paths)
+
+Pipeline:
+  Gazebo camera sensor
+    → ros_gz_image bridge (Gazebo Transport → ROS2 sensor_msgs/Image)
+    → CameraManager (ROS2 subscriber → cv2 JPEG encode → thread-safe frame store)
+    → FastAPI MJPEG endpoint (/camera/{drone_id})
+    → <img> tag in browser (multipart/x-mixed-replace)
+
+Performance findings:
+  - 3 cameras at 1280x960 overwhelmed local GPU (Gazebo choppy)
+  - Optimized: downscale to 480x360, JPEG quality 50, throttle to 4fps
+  - Still too heavy for local machine with 3 cameras
+  - Decision: drone 1 gets camera, drones 2-3 use lightweight x500
+  - Future: move sim to AWS EC2 GPU instance (g5.xlarge, NVIDIA A10G)
+
+Command Center features (cumulative):
+  - Fleet status panel (3 drone cards with live telemetry)
+  - 2D NED map (positions, headings, velocity vectors, proximity alerts)
+  - Camera feed overlay (MJPEG stream, click to switch drones, click to resize)
+  - NLP command input (type English → Claude parses → drones fly)
+  - Voice input (browser Web Speech API)
+  - Color-coded event log
+
+What changed Day 2 → Day 3:
+  - Day 2: Type English → drones fly in Gazebo (no visual feedback from drone POV)
+  - Day 3: See what the drone sees in the Command Center dashboard
+  - Added: CameraManager, MJPEG streaming, ros_gz_image auto-bridge
+  - Added: Disk cleanup script (droneclean alias)
+  - Fixed: PX4 stdout logs filling disk (redirected to /dev/null)
+
+============================================
+  CAMERA FEED: WORKING (1 cam optimal, 3 cam possible on GPU)
+============================================
