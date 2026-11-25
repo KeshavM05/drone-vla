@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import logging
 import math
+import time
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING
 
@@ -38,11 +39,21 @@ class ProximityAlert:
     is_critical: bool
 
 
+LOG_THROTTLE_S = 5.0
+
+
 class CollisionAvoidance:
     def __init__(self, config: CAConfig | None = None):
         self.config = config or CAConfig()
         self._alerts: list[ProximityAlert] = []
         self._avoidance_active: dict[int, tuple[float, float, float]] = {}
+        self._log_times: dict[tuple, float] = {}
+
+    def _log_throttled(self, key: tuple, log_fn, msg: str, *args):
+        now = time.monotonic()
+        if now - self._log_times.get(key, 0.0) >= LOG_THROTTLE_S:
+            log_fn(msg, *args)
+            self._log_times[key] = now
 
     def assigned_altitude_ned(self, drone_id: int) -> float:
         alt_agl = self.config.altitude_base_m + (drone_id - 1) * self.config.altitude_layer_m
@@ -73,13 +84,17 @@ class CollisionAvoidance:
                     self._alerts.append(alert)
 
                     if is_critical:
-                        logger.warning(
+                        self._log_throttled(
+                            (drones[i].id, drones[j].id, "critical"),
+                            logger.warning,
                             "CRITICAL: Drone %d and %d at %.1fm — applying avoidance",
                             drones[i].id, drones[j].id, dist,
                         )
                         self._compute_avoidance(drones[i], drones[j])
                     else:
-                        logger.info(
+                        self._log_throttled(
+                            (drones[i].id, drones[j].id, "warning"),
+                            logger.info,
                             "Warning: Drone %d and %d at %.1fm (< %.0fm)",
                             drones[i].id, drones[j].id, dist,
                             self.config.warning_distance_m,

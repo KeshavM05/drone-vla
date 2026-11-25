@@ -138,16 +138,18 @@ class SwarmBridge:
         mt = cmd.mission_type
 
         if mt == MissionType.LAND:
-            self._swarm.command_land()
-            drone_ids = cmd.assignment.drone_ids or [d.id for d in self._swarm.drones]
-            self.add_log("info", f"LAND: drones {drone_ids}", "executor")
-            return {"type": "land", "drones": drone_ids}
+            drone_ids = cmd.assignment.drone_ids or None
+            self._swarm.command_land(drone_ids)
+            landed = drone_ids or [d.id for d in self._swarm.drones]
+            self.add_log("info", f"LAND: drones {landed}", "executor")
+            return {"type": "land", "drones": landed}
 
         if mt == MissionType.RETURN_TO_HOME:
-            self._swarm.command_land()
-            drone_ids = cmd.assignment.drone_ids or [d.id for d in self._swarm.drones]
-            self.add_log("info", f"RTH: drones {drone_ids}", "executor")
-            return {"type": "rth", "drones": drone_ids}
+            drone_ids = cmd.assignment.drone_ids or None
+            self._swarm.command_land(drone_ids)
+            landed = drone_ids or [d.id for d in self._swarm.drones]
+            self.add_log("info", f"RTH: drones {landed}", "executor")
+            return {"type": "rth", "drones": landed}
 
         if mt == MissionType.TAKEOFF:
             self._swarm.command_takeoff()

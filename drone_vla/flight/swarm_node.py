@@ -222,9 +222,16 @@ class SwarmManager(Node):
         elif self.state == SwarmState.ARMED:
             self._set_state(SwarmState.IN_FLIGHT)
 
-    def command_land(self):
-        self._tasks.clear()
-        self._set_state(SwarmState.LANDING)
+    def command_land(self, drone_ids: list[int] | None = None):
+        if drone_ids is None:
+            self._tasks.clear()
+            self._set_state(SwarmState.LANDING)
+        else:
+            for did in drone_ids:
+                self._tasks.pop(did, None)
+                drone = next((d for d in self.drones if d.id == did), None)
+                if drone:
+                    drone.command_land()
 
     def command_hold(self):
         for d in self.drones:

@@ -8,6 +8,8 @@ PX4_DIR="$HOME/PX4-Autopilot"
 NUM_DRONES=${1:-3}
 # Use camera model: x500_mono_cam_45 (45-deg), x500_mono_cam (forward), x500 (no cam)
 PX4_MODEL=${2:-gz_x500_mono_cam_45}
+# Gazebo world: sar_village (buildings + targets), default, baylands, etc.
+PX4_GZ_WORLD=${PX4_GZ_WORLD:-sar_village}
 PIDS=()
 
 cleanup() {
@@ -25,26 +27,32 @@ trap cleanup EXIT INT TERM
 echo "=== Killing old processes ==="
 pkill -f "px4.*-i [0-9]" 2>/dev/null || true
 pkill -f "gz sim" 2>/dev/null || true
+pkill -f "ruby.*gz" 2>/dev/null || true
+pkill -f "parameter_bridge" 2>/dev/null || true
+pkill -f "ros_gz_image" 2>/dev/null || true
 pkill -f MicroXRCEAgent 2>/dev/null || true
 sleep 2
+pkill -9 -f "gz" 2>/dev/null || true
+sleep 1
 
-echo "=== Clearing old PX4 logs ==="
+echo "=== Clearing old PX4 logs + lockfiles ==="
 rm -rf "$PX4_DIR"/build/px4_sitl_default/rootfs/*/log/ \
        "$PX4_DIR"/build/px4_sitl_default/rootfs/log/ 2>/dev/null || true
 rm -f /tmp/px4_drone*.log /tmp/px4_cam*.log /tmp/px4_swarm_startup.log /tmp/xrce_agent.log 2>/dev/null || true
+rm -f /tmp/px4_lock-* 2>/dev/null || true
 
 cd "$PX4_DIR"
 
 echo "=== Starting PX4 ${NUM_DRONES}-drone swarm ==="
 
-echo "Starting drone 1 (starts Gazebo, model: ${PX4_MODEL})..."
-PX4_SYS_AUTOSTART=4001 PX4_SIM_MODEL="${PX4_MODEL}" \
+echo "Starting drone 1 (starts Gazebo, model: ${PX4_MODEL}, world: ${PX4_GZ_WORLD})..."
+PX4_SYS_AUTOSTART=4001 PX4_SIM_MODEL="${PX4_MODEL}" PX4_GZ_WORLD="${PX4_GZ_WORLD}" \
     ./build/px4_sitl_default/bin/px4 -i 1 > /dev/null 2>&1 &
 PIDS+=($!)
 echo "  PID: ${PIDS[-1]}"
 
-echo "Waiting 20s for Gazebo + first drone..."
-sleep 20
+echo "Waiting 30s for Gazebo + first drone + world..."
+sleep 30
 
 # Derive Gazebo model names — drone 1 gets camera, others use lightweight x500
 GZ_MODEL_BASE="${PX4_MODEL#gz_}"
@@ -66,6 +74,7 @@ for i in $(seq 2 "$NUM_DRONES"); do
 
     PX4_GZ_STANDALONE=1 PX4_SYS_AUTOSTART=4001 \
         PX4_GZ_MODEL_NAME="${GZ_MODEL_LIGHT}_${i}" \
+        PX4_GZ_WORLD="${PX4_GZ_WORLD}" \
         ./build/px4_sitl_default/bin/px4 -i "$i" > /dev/null 2>&1 &
     PIDS+=($!)
     echo "  PID: ${PIDS[-1]}"
