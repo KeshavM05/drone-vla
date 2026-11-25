@@ -108,3 +108,30 @@ If Drone 1 goes offline mid-mission:
 3. Drone 1 status set to `ERROR`, mission assignment cleared
 4. Next available drone (highest battery) absorbs mission `M0001`
 5. `MissionExecutor` re-dispatches remaining waypoints to the backup drone
+
+## NLP Conversation Context (Added Day 5)
+
+The `IntentParser` now maintains a 10-message conversation history. Each operator command and Claude's JSON response are stored in a rolling window. This enables:
+
+- **Follow-up commands**: "search 20m radius" → "within 100m" carries the search context
+- **Corrections**: "no, send drone 2 instead" references the prior command
+- **Incremental refinement**: Build up complex missions through dialogue
+
+The fleet state (drone positions, battery, status) is included with every request so the LLM can center searches on the drone's current GPS position.
+
+## Waypoint Yaw Control (Added Day 5)
+
+During waypoint navigation, the swarm manager computes `atan2(target_y - pos_y, target_x - pos_x)` for each drone and passes it as the yaw setpoint in `TrajectorySetpoint`. This ensures the drone (and its forward-mounted 45-degree camera) always faces the direction of travel.
+
+## Supported Mission Types
+
+| Type | Command Examples | Behavior |
+|------|-----------------|----------|
+| `takeoff` | "all drones take off" | Arms + offboard + climb to altitude |
+| `land` | "drone 1 land" | Per-drone or all-drone landing |
+| `loiter` | "stop", "hover", "hold position" | Clears task, drone holds current position |
+| `area_search` | "search 20m radius" | Lawnmower/boustrophedon sweep pattern |
+| `perimeter_patrol` | "patrol the village" | Divided perimeter segments |
+| `formation_flight` | "form a triangle" | Computed formation positions |
+| `point_inspection` | "inspect the warehouse" | Orbital path around target |
+| `return_to_home` | "RTH", "come home" | Return and land at origin |

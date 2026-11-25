@@ -90,3 +90,22 @@ A typical parsed output from the operator saying "Swarm Alpha, search the northe
   "clarification_needed": null
 }
 ```
+
+## Updates (Day 5)
+
+### New Mission Type: `loiter`
+
+Added `MissionType.LOITER` for "stop", "hover", "hold position" commands. Clears the drone's current task so it maintains its current position via offboard trajectory setpoints.
+
+### Path Planner Rewrite
+
+Replaced Voronoi decomposition + arc sweeps with a clean **boustrophedon (lawnmower) sweep** pattern:
+
+- Lane width in **meters** (15m default) instead of degrees
+- Multi-drone: polygon split into horizontal strips (1 per drone)
+- Removed `scipy.spatial.Voronoi` dependency for search planning
+- Search centered on drone's current GPS when no location specified
+
+### speed_ms Validation
+
+Minimum changed from `0.5` to `0.0` to support loiter (zero speed).

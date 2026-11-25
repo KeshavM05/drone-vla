@@ -90,3 +90,13 @@ All values in `drone_vla/config.py` under `CollisionAvoidanceConfig`:
 - `drone_vla/flight/px4_drone.py` — Per-drone PX4 ROS2 controller
 - `drone_vla/flight/swarm_node.py` — Central node (runs CA + telemetry)
 - `scripts/test_collision_avoidance.py` — Integration test
+
+## Log Throttling (Added Day 5)
+
+Collision avoidance warnings are throttled to **1 message per 5 seconds per drone pair**. Without throttling, 3 drones on the ground (all within 5m) generated ~30 log messages/second, which:
+
+1. Flooded the WebSocket connection to the browser
+2. Caused Chrome to freeze/crash
+3. Made the Command Center unusable
+
+The `_log_throttled()` method uses a dictionary keyed by `(drone_a, drone_b, severity)` with `time.monotonic()` timestamps. The avoidance calculations still run at full rate — only the logging is throttled.

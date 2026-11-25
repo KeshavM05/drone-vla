@@ -141,3 +141,37 @@ By default, only drone 1 uses the camera model (`x500_mono_cam_45`). Drones 2-3 
 - `drone_vla/web/static/index.html` — Single-page dashboard
 - `drone_vla/nlp/intent_parser.py` — Claude Bedrock NLP
 - `scripts/start_command_center.py` — Launcher script (camera topic discovery)
+
+## SAR Village World (Added Day 5)
+
+The simulation uses a custom SAR village Gazebo world (`worlds/sar_village.sdf`) with:
+
+- **Buildings**: Warehouse (NE), two houses (NW, SW), tower (SE)
+- **Infrastructure**: N-S and E-W roads, shipping containers, landing pad with blue H
+- **Vehicles**: Red truck, white van on roads
+- **SAR targets**: Orange, red, yellow ground markers with emissive glow
+- **Vegetation**: 3 trees with trunk + canopy
+
+All models use SDF primitives (boxes, cylinders, spheres) — no Fuel downloads needed.
+
+### PX4_GZ_WORLD
+
+The world name in the SDF (`<world name="sar_village">`) must match the `PX4_GZ_WORLD` env var exactly. All PX4 instances (including standalone drones 2/3) need this variable set, or they default to world "default" and fail to connect.
+
+## Voice Commands Reference
+
+| Command | What Happens |
+|---------|-------------|
+| "all drones take off" | Arms all drones, climbs to altitude layers |
+| "drone 1 search 20m radius" | Lawnmower sweep centered on drone 1's current position |
+| "drone 1 land" | Only drone 1 lands (others keep flying) |
+| "stop" / "hover" | Drone holds current position |
+| "drone 2 inspect the warehouse" | Orbital inspection of warehouse area |
+| "patrol the village perimeter" | Perimeter patrol divided among available drones |
+| "form a triangle" | Formation flight with computed positions |
+
+### Tips
+- Follow-up commands carry context ("within 100m" after a search command)
+- The NLP knows the village layout — say "the warehouse" or "the tower" instead of GPS coords
+- Camera feed is from drone 1 only (45-degree forward-down angle)
+- Drones face toward their next waypoint so camera shows what's ahead
