@@ -8,10 +8,21 @@ tags:
 ---
 # Current System Status
 
-Last updated: 2026-11-21 (Day 3, camera optimized)
+Last updated: 2026-11-25 (Day 5, SAR village + CV pipeline)
 
 ## Recent Changes
 
+### Day 5 (2026-11-25)
+- **SAR village Gazebo world**: Custom world with buildings, vehicles, containers, trees, SAR targets, landing pad — all SDF primitives (no Fuel downloads)
+- **Per-drone commands**: `command_land()` accepts optional `drone_ids` — "drone 1 land" only lands drone 1
+- **NLP conversation context**: 10-message history window so follow-up commands carry context
+- **NLP SAR awareness**: System prompt includes village layout with GPS coords — generates real waypoints instead of asking for coordinates
+- **PX4_GZ_WORLD fix**: Standalone PX4 instances (drones 2/3) now get world name passed — were defaulting to "default" and failing
+- **CA log throttle**: Collision avoidance messages throttled to 1/5s per drone pair (was flooding WebSocket, freezing browser)
+- **Path planner rewrite**: Replaced Voronoi + arc sweeps with clean boustrophedon lawnmower pattern. Lane width in meters (15m default). Multi-drone splits polygon into horizontal strips
+- **Next**: YOLO real-time detection + Claude Vision scene analysis, AWS GPU for sim performance
+
+### Day 3-4
 - **Camera feed optimized**: 1-camera config (drone 1 = camera, drones 2-3 = lightweight x500)
 - Frames downscaled 1280x960 → 480x360, JPEG quality 50, throttled to 4fps
 - PX4 stdout redirected to /dev/null, cleanup script + bash aliases added

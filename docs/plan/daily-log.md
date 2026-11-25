@@ -8,6 +8,15 @@ tags:
 ---
 # Daily Log
 
+## Nov 25, 2026 - Day 5
+
+**Plan:** Test SAR village world, fix E2E pipeline issues, add CV pipeline
+**Actual:** Created SAR village Gazebo world (buildings, vehicles, containers, trees, SAR markers, landing pad — all SDF primitives). Fixed PX4_GZ_WORLD not being passed to standalone instances (drones 2/3 were connecting to world "default" instead of "sar_village"). Fixed per-drone land command (was landing all 3 when asked to land 1). Added NLP conversation history (10-msg window) so follow-ups like "within 100m radius" carry context. Updated NLP system prompt with SAR village GPS coords so it generates real waypoints. Throttled collision avoidance logging (was flooding WebSocket at 30 msg/s, freezing browser). Rewrote path planner: replaced Voronoi + arc sweeps with clean boustrophedon lawnmower pattern with meter-based lane widths.
+**Blocked by:** Gazebo world name must match PX4_GZ_WORLD env var exactly. Collision avoidance spam caused browser freeze. Camera bridge needs restart after drone reconnection. Sim performance is slow on laptop CPU.
+**Decision:** Need real CV pipeline (YOLO + Claude Vision), not position-based shortcuts. Moving to AWS GPU for sim performance is priority. Path planner simplified — Voronoi was overkill, horizontal strip division is cleaner.
+**Next:** YOLO real-time object detection on camera feed. Claude Vision for scene analysis. AWS EC2 GPU setup for sim performance. Fix camera mounting angle on drone model.
+**Hours:** 4h
+
 Write here at the start and end of every work session. This is your accountability trail and the raw material for the journey retrospective.
 
 ## Format
