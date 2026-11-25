@@ -7,7 +7,6 @@ import math
 from dataclasses import dataclass
 
 import numpy as np
-from scipy.spatial import Voronoi
 
 from drone_vla.nlp.schemas import FormationType, GeoPoint, MissionCommand
 
@@ -41,106 +40,72 @@ def _offset_meters(origin: GeoPoint, dx_m: float, dy_m: float) -> GeoPoint:
     return GeoPoint(lat=origin.lat + dlat, lon=origin.lon + dlon)
 
 
+DEFAULT_LANE_WIDTH_M = 15.0
+M_PER_DEG_LAT = 111_320.0
+
+
 def plan_area_search(
     polygon: list[GeoPoint],
     num_drones: int,
     altitude_m: float,
     overlap_pct: float = 20.0,
 ) -> list[list[Waypoint]]:
-    """Decompose a search polygon into Voronoi cells and generate sweep paths per drone."""
+    """Generate efficient lawnmower sweep paths over a search polygon.
+
+    For multi-drone: splits the polygon into horizontal strips (one per drone).
+    Each drone sweeps its strip with a boustrophedon pattern.
+    """
     if num_drones < 1 or len(polygon) < 3:
         return []
 
     pts = np.array([[p.lat, p.lon] for p in polygon])
-    centroid = pts.mean(axis=0)
+    min_lat, min_lon = pts.min(axis=0)
+    max_lat, max_lon = pts.max(axis=0)
 
-    angles = np.linspace(0, 2 * math.pi, num_drones, endpoint=False)
-    spread = np.max(np.ptp(pts, axis=0)) * 0.3
-    seeds = np.array([
-        [centroid[0] + spread * math.cos(a), centroid[1] + spread * math.sin(a)]
-        for a in angles
-    ])
+    lane_width_m = DEFAULT_LANE_WIDTH_M * (1.0 - overlap_pct / 100.0)
+    lane_width_m = max(lane_width_m, 5.0)
+    centroid_lat = (min_lat + max_lat) / 2
+    m_per_deg_lon = M_PER_DEG_LAT * math.cos(math.radians(centroid_lat))
 
-    if num_drones >= 3:
-        far = 10.0
-        mirror_pts = np.vstack([
-            seeds,
-            seeds + [far, 0], seeds - [far, 0],
-            seeds + [0, far], seeds - [0, far],
-        ])
-        vor = Voronoi(mirror_pts)
-    else:
-        vor = None
+    strip_height_lat = (max_lat - min_lat) / num_drones
 
     all_paths: list[list[Waypoint]] = []
     for i in range(num_drones):
-        if vor and i < len(vor.point_region):
-            region_idx = vor.point_region[i]
-            region_verts = vor.regions[region_idx]
-            if -1 not in region_verts and region_verts:
-                cell = vor.vertices[region_verts]
-                path = _lawnmower_sweep(cell, altitude_m, overlap_pct)
-                all_paths.append(path)
-                continue
-
-        sector_angle_start = (2 * math.pi / num_drones) * i
-        sector_angle_end = sector_angle_start + (2 * math.pi / num_drones)
-        center = GeoPoint(lat=float(centroid[0]), lon=float(centroid[1]))
-        path = _sector_sweep(center, spread * 111_000, sector_angle_start, sector_angle_end,
-                             altitude_m)
+        strip_min_lat = min_lat + i * strip_height_lat
+        strip_max_lat = strip_min_lat + strip_height_lat
+        path = _lawnmower_sweep_meters(
+            strip_min_lat, strip_max_lat, min_lon, max_lon,
+            lane_width_m, m_per_deg_lon, altitude_m,
+        )
         all_paths.append(path)
 
     return all_paths
 
 
-def _lawnmower_sweep(
-    cell_vertices: np.ndarray,
+def _lawnmower_sweep_meters(
+    min_lat: float, max_lat: float,
+    min_lon: float, max_lon: float,
+    lane_width_m: float,
+    m_per_deg_lon: float,
     altitude_m: float,
-    overlap_pct: float,
 ) -> list[Waypoint]:
-    """Generate a boustrophedon (lawnmower) sweep pattern within a convex cell."""
-    min_lat, min_lon = cell_vertices.min(axis=0)
-    max_lat, max_lon = cell_vertices.max(axis=0)
-
-    lane_width_deg = (1.0 - overlap_pct / 100.0) * 0.0001
-    if lane_width_deg <= 0:
-        lane_width_deg = 0.00005
+    """Generate a boustrophedon sweep with lane width in meters."""
+    lane_width_lon = lane_width_m / m_per_deg_lon
 
     waypoints: list[Waypoint] = []
     lon = min_lon
     forward = True
-    while lon <= max_lon:
+    while lon <= max_lon + lane_width_lon * 0.5:
+        clamped_lon = min(lon, max_lon)
         if forward:
-            waypoints.append(Waypoint(lat=float(min_lat), lon=float(lon), alt_m=altitude_m))
-            waypoints.append(Waypoint(lat=float(max_lat), lon=float(lon), alt_m=altitude_m))
+            waypoints.append(Waypoint(lat=min_lat, lon=clamped_lon, alt_m=altitude_m))
+            waypoints.append(Waypoint(lat=max_lat, lon=clamped_lon, alt_m=altitude_m))
         else:
-            waypoints.append(Waypoint(lat=float(max_lat), lon=float(lon), alt_m=altitude_m))
-            waypoints.append(Waypoint(lat=float(min_lat), lon=float(lon), alt_m=altitude_m))
+            waypoints.append(Waypoint(lat=max_lat, lon=clamped_lon, alt_m=altitude_m))
+            waypoints.append(Waypoint(lat=min_lat, lon=clamped_lon, alt_m=altitude_m))
         forward = not forward
-        lon += lane_width_deg
+        lon += lane_width_lon
 
-    return waypoints
-
-
-def _sector_sweep(
-    center: GeoPoint,
-    radius_m: float,
-    angle_start: float,
-    angle_end: float,
-    altitude_m: float,
-    num_rings: int = 4,
-) -> list[Waypoint]:
-    """Generate an arc-based sweep for a sector of the search area."""
-    waypoints: list[Waypoint] = []
-    for ring in range(1, num_rings + 1):
-        r = radius_m * ring / num_rings
-        steps = max(4, int(8 * ring / num_rings))
-        for j in range(steps + 1):
-            angle = angle_start + (angle_end - angle_start) * j / steps
-            dx = r * math.cos(angle)
-            dy = r * math.sin(angle)
-            pt = _offset_meters(center, dx, dy)
-            waypoints.append(Waypoint(lat=pt.lat, lon=pt.lon, alt_m=altitude_m))
     return waypoints
 
 
