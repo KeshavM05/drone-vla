@@ -10,6 +10,7 @@ Responsibilities:
 from __future__ import annotations
 
 import logging
+import math
 import time
 from enum import Enum
 from typing import Optional
@@ -171,7 +172,8 @@ class SwarmManager(Node):
                 if target:
                     x, y, z = self.ca.deconflict_target(d.id, *target)
                     x, y, z = self.ca.apply_avoidance_to_target(d.id, x, y, z)
-                    d.publish_trajectory(x, y, z)
+                    yaw = math.atan2(y - d.pos.y, x - d.pos.x)
+                    d.publish_trajectory(x, y, z, yaw)
 
                     if d.at_target(tolerance_m=2.0):
                         if not task.advance():
