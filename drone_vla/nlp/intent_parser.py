@@ -29,6 +29,7 @@ COORDINATE HELPERS — use these to convert relative references to GPS:
 - 1 meter east  ≈ +0.0000135° longitude (at this latitude)
 - Home: lat=47.397971, lon=8.546164
 - "around here" / "the area" / "the map" → 100m radius from home
+- "nearby" / "around me" / radius with no location → center on the ASSIGNED DRONE'S current position from fleet state
 - "the warehouse" → lat=47.39820, lon=8.54650
 - "the houses" → lat=47.39820, lon=8.54589 (NW house)
 - "the tower" → lat=47.39775, lon=8.54657
@@ -40,7 +41,9 @@ RULES:
 3. USE THE COORDINATE HELPERS to generate actual GPS coordinates. Do NOT ask for GPS coordinates \
 — convert relative references ("100m radius", "near the warehouse", "sweep the area") yourself.
 4. For area_search: generate a search_polygon (4+ points forming the search area). \
-For "100m radius" or "the area", use a square: home ± 100m in each direction.
+For "100m radius" or "the area", use a square: center ± radius in each direction. \
+IMPORTANT: If a radius is given with no specific location, center the search on the \
+assigned drone's CURRENT GPS position from the fleet state, NOT on home.
 5. For point_inspection: set target_point to the GPS of the referenced location.
 6. Default altitude: 15m AGL. Default speed: 5 m/s.
 7. Default contingency is auto_rth.
