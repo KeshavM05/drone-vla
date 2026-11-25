@@ -157,6 +157,13 @@ class SwarmBridge:
             self.add_log("info", f"TAKEOFF: drones {drone_ids}", "executor")
             return {"type": "takeoff", "drones": drone_ids}
 
+        if mt == MissionType.LOITER:
+            drone_ids = cmd.assignment.drone_ids or [d.id for d in self._swarm.drones]
+            for did in drone_ids:
+                self._swarm._tasks.pop(did, None)
+            self.add_log("info", f"LOITER: drones {drone_ids} holding position", "executor")
+            return {"type": "loiter", "drones": drone_ids}
+
         try:
             mission = await self._executor.execute_command(cmd)
             if mission:

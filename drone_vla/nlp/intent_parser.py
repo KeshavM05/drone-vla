@@ -63,7 +63,7 @@ Respond with ONLY valid JSON (no markdown, no explanation):
 
 MissionCommand fields:
 - mission_type: area_search | perimeter_patrol | formation_flight | point_inspection | \
-relay_station | return_to_home | takeoff | land
+relay_station | return_to_home | takeoff | land | loiter
 - assignment: {"drone_ids": [int], "group_name": str|null}
 - search_polygon: [{"lat": float, "lon": float}, ...] — for area_search
 - perimeter_polygon: [{"lat": float, "lon": float}, ...] — for perimeter_patrol

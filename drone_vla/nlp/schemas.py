@@ -17,6 +17,7 @@ class MissionType(str, Enum):
     RETURN_TO_HOME = "return_to_home"
     TAKEOFF = "takeoff"
     LAND = "land"
+    LOITER = "loiter"
 
 
 class FormationType(str, Enum):
@@ -71,7 +72,7 @@ class MissionCommand(BaseModel):
     station_points: Optional[list[GeoPoint]] = None
 
     altitude_agl_m: Optional[float] = Field(default=None, ge=0.0, le=500.0)
-    speed_ms: Optional[float] = Field(default=None, ge=0.5, le=30.0)
+    speed_ms: Optional[float] = Field(default=None, ge=0.0, le=30.0)
 
     formation_type: Optional[FormationType] = None
     spacing_m: Optional[float] = Field(default=None, ge=1.0, le=100.0)
