@@ -56,12 +56,21 @@ class ROS2Config(BaseModel):
     qos_depth: int = 10
 
 
+class DetectionConfig(BaseModel):
+    enabled: bool = True
+    yolo_model: str = "yolov8n.pt"
+    confidence: float = 0.4
+    inference_interval: float = 0.2
+    color_markers: bool = True
+
+
 class AppConfig(BaseModel):
     stt: STTConfig = STTConfig()
     llm: LLMConfig = LLMConfig()
     fleet: FleetConfig = FleetConfig()
     simulation: SimulationConfig = SimulationConfig()
     ros2: ROS2Config = ROS2Config()
+    detection: DetectionConfig = DetectionConfig()
 
 
 def load_config(path: str | Path | None = None) -> AppConfig:

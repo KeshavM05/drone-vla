@@ -22,6 +22,7 @@ class CameraManager:
 
     def __init__(self, jpeg_quality: int = 50):
         self._frames: dict[int, bytes] = {}
+        self._raw_frames: dict[int, np.ndarray] = {}
         self._lock = threading.Lock()
         self._quality = jpeg_quality
         self._last_encode: dict[int, float] = {}
@@ -60,6 +61,7 @@ class CameraManager:
             if ok:
                 with self._lock:
                     self._frames[drone_id] = buf.tobytes()
+                    self._raw_frames[drone_id] = bgr
                 self._last_encode[drone_id] = now
         except Exception as e:
             logger.debug("Frame encode error drone %d: %s", drone_id, e)
@@ -67,6 +69,11 @@ class CameraManager:
     def get_frame(self, drone_id: int) -> Optional[bytes]:
         with self._lock:
             return self._frames.get(drone_id)
+
+    def get_raw_frame(self, drone_id: int) -> Optional[np.ndarray]:
+        with self._lock:
+            f = self._raw_frames.get(drone_id)
+            return f.copy() if f is not None else None
 
     def get_active_cameras(self) -> list[int]:
         with self._lock:

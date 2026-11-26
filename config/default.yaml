@@ -30,3 +30,10 @@ ros2:
   enabled: true
   namespace: "/drone_vla"
   qos_depth: 10
+
+detection:
+  enabled: true
+  yolo_model: "yolov8n.pt"
+  confidence: 0.4
+  inference_interval: 0.2
+  color_markers: true

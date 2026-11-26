@@ -40,6 +40,7 @@ class SwarmBridge:
         self._executor = None
         self._intent_parser = None
         self._camera = None
+        self._detector = None
         self._logs: list[dict] = []
         self._max_logs = 500
         self._ws_clients: set[WebSocket] = set()
@@ -53,6 +54,9 @@ class SwarmBridge:
 
     def set_camera_manager(self, cam):
         self._camera = cam
+
+    def set_detector(self, detector):
+        self._detector = detector
 
     def set_intent_parser(self, parser):
         self._intent_parser = parser
@@ -322,13 +326,16 @@ async def api_command(body: dict):
 async def camera_stream(drone_id: int):
     async def generate():
         while True:
-            if bridge._camera:
+            frame = None
+            if bridge._detector:
+                frame = bridge._detector.get_annotated_frame(drone_id)
+            if frame is None and bridge._camera:
                 frame = bridge._camera.get_frame(drone_id)
-                if frame:
-                    yield (
-                        b"--frame\r\n"
-                        b"Content-Type: image/jpeg\r\n\r\n" + frame + b"\r\n"
-                    )
+            if frame:
+                yield (
+                    b"--frame\r\n"
+                    b"Content-Type: image/jpeg\r\n\r\n" + frame + b"\r\n"
+                )
             await asyncio.sleep(0.25)
 
     return StreamingResponse(
@@ -342,6 +349,14 @@ async def api_cameras():
     if bridge._camera:
         return JSONResponse({"cameras": bridge._camera.get_active_cameras()})
     return JSONResponse({"cameras": []})
+
+
+@app.get("/api/detections/{drone_id}")
+async def api_detections(drone_id: int):
+    if bridge._detector:
+        dets = bridge._detector.get_detections(drone_id)
+        return JSONResponse({"drone_id": drone_id, "detections": [d.to_dict() for d in dets]})
+    return JSONResponse({"drone_id": drone_id, "detections": []})
 
 
 def run(host: str = "0.0.0.0", port: int = 8080):

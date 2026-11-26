@@ -98,6 +98,26 @@ def start_live_mode(config, num_drones=3, camera_topics=None):
         cam.subscribe(swarm, drone_id, topic)
     bridge.set_camera_manager(cam)
 
+    if config.detection.enabled:
+        from drone_vla.cv.detector import DetectionManager
+        detector = DetectionManager(
+            yolo_model=config.detection.yolo_model,
+            confidence=config.detection.confidence,
+            inference_interval=config.detection.inference_interval,
+            color_markers=config.detection.color_markers,
+        )
+        detector.set_camera(cam)
+        detector.on_detection(
+            lambda did, dets: bridge.add_log(
+                "warning",
+                f"DETECTION on drone {did}: "
+                + ", ".join(f"{d.label} ({d.confidence:.0%})" for d in dets),
+                "cv",
+            )
+        )
+        detector.start()
+        bridge.set_detector(detector)
+
     def spin_ros2():
         rclpy.spin(swarm)
 
