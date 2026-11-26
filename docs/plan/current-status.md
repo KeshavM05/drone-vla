@@ -8,9 +8,19 @@ tags:
 ---
 # Current System Status
 
-Last updated: 2026-11-25 (Day 5, SAR village + CV pipeline)
+Last updated: 2026-11-26 (Day 6, detection pipeline)
 
 ## Recent Changes
+
+### Day 6 (2026-11-26)
+- **YOLO detection pipeline**: `drone_vla/cv/detector.py` — YOLOv8n for COCO objects + HSV color filtering for SAR markers (orange/red/yellow/blue)
+- **Annotated camera stream**: `/camera/{id}` auto-serves frames with bounding boxes when detection is active
+- **Detection alerts**: Broadcast to Command Center logs via WebSocket (`source: "cv"`)
+- **Detection API**: `GET /api/detections/{drone_id}` returns current detections as JSON
+- **CameraManager raw frames**: Added `get_raw_frame()` for detector input
+- **Config**: `DetectionConfig` model + `detection:` section in `default.yaml`
+- **Physical demo plan**: 2 drones, dynamic discovery, orange marker = detect + Claude Vision, blue marker = precision landing (PID servoing)
+- **Next**: Live test with Gazebo, Claude Vision integration, visual servoing, AWS GPU
 
 ### Day 5 (2026-11-25)
 - **SAR village Gazebo world**: Custom world with buildings, vehicles, containers, trees, SAR targets, landing pad — all SDF primitives (no Fuel downloads)

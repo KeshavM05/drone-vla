@@ -8,6 +8,17 @@ tags:
 ---
 # Daily Log
 
+## Nov 26, 2026 - Day 6
+
+**Plan:** Build YOLO detection pipeline, plan physical demo scenario
+**Actual:** Built `drone_vla/cv/detector.py` — DetectionManager with two backends: YOLOv8n (COCO objects) and HSV color filtering (orange/red/yellow/blue SAR markers). Added raw BGR frame storage to CameraManager. Camera stream auto-serves annotated frames with bounding boxes. Detection alerts broadcast to Command Center via WebSocket. Added DetectionConfig to config system. API endpoint `GET /api/detections/{drone_id}`. Tested both backends — YOLO loads and runs, color detection correctly identifies orange markers. Discussed physical demo: 2 drones, no pre-programmed GPS, dynamic discovery. Orange marker = detect + descend + Claude Vision. Blue marker = precision landing with PID visual servoing (hover as fallback).
+**Blocked by:** No GPU on dev machine — YOLO runs CPU-only (~5-10 FPS). Need live test with Gazebo camera feed.
+**Decision:** Two detection backends (YOLO for real objects, color for SAR markers). Precision landing is stretch goal — hover-and-hold is safe fallback. Camera angle (both 45° vs one 45° + one down) TBD after flight testing.
+**Next:** Test detection pipeline with live Gazebo camera. Claude Vision integration for scene analysis. Visual servoing for precision landing. AWS GPU setup.
+**Hours:** 2h
+
+---
+
 ## Nov 25, 2026 - Day 5
 
 **Plan:** Test SAR village world, fix E2E pipeline issues, add CV pipeline
