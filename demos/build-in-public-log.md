@@ -6,20 +6,18 @@ Daily content for LinkedIn + Twitter. Same post goes on both.
 
 ## Day 1 — First Flight (Nov 19)
 
-**Hook:** Built a 3-drone swarm from scratch today.
+**Hook:** I mass pivoted frameworks mid-day and still got 3 drones flying by evening.
 
 **Post:**
 Day 1 of building a natural language drone swarm command system.
 
-Got 3 PX4 drones flying in formation in Gazebo simulation. They arm, take off to 20m, fly a triangle pattern with 30m spacing, hold for 10 seconds, and land.
+I started the morning on ArduPilot. By lunch I realized multi-drone simulation was too fragile to build on — random crashes, flaky connections, hours wasted debugging someone else's bugs. So I scrapped it and switched to PX4.
 
-Stack: PX4 v1.16 + Gazebo Harmonic + ROS2 Humble
+By evening, 3 drones were flying triangle formation in Gazebo. Arm, takeoff to 20m, hold 30m spacing, land. Clean.
 
-The wild part: I started with ArduPilot, realized multi-drone SITL was too fragile, pivoted to PX4 mid-day, and had 3 drones flying by evening.
+Then my disk filled up. PX4 writes flight logs silently in the background — 27GB in 7 hours from 3 idle drones. I didn't notice until builds started failing with "no space left on device." First lesson: always kill your sim when you're done.
 
-Also discovered PX4 writes flight logs that consumed 27GB in 7 hours and filled my disk. First bug of many.
-
-Tomorrow: making them understand English.
+Stack: PX4 v1.16 + Gazebo Harmonic + ROS2 Humble. Tomorrow I'm wiring up Claude so I can talk to these things in English.
 
 #drones #robotics #buildinpublic #px4 #ros2
 
@@ -30,25 +28,17 @@ Tomorrow: making them understand English.
 **Hook:** Type English. Drones fly.
 
 **Post:**
-Day 2: I can now type "all 3 drones fly triangle formation at 20 meters" and they actually do it.
+Day 2: I typed "all 3 drones fly triangle formation at 20 meters" and watched them actually do it.
 
-Full pipeline working:
-→ Type a sentence
-→ Claude (AI) parses the intent
-→ Fleet manager allocates drones
-→ Path planner computes waypoints
-→ Drones fly in Gazebo
+The pipeline is deceptively simple — type a sentence, Claude parses the intent into structured JSON, the fleet manager picks which drones go where, the path planner computes waypoints, and PX4 flies them. Five systems talking to each other, end to end.
 
-Also built a Command Center dashboard — web UI with live telemetry, drone cards, 2D map, and a command bar.
+Building it was not simple. The drones refused to arm because I'd disabled the magnetometer in simulation — turns out they still need to know which way is north even in a fake world. Then the fleet manager kept saying "no drones available" because it was filtering out armed drones. Then the formation planner crashed because I forgot to handle "no center point."
 
-Bugs I fixed today:
-- Magnetometer disabled → drones couldn't figure out which way is north → refused to arm
-- Fleet manager excluded armed drones from missions (oops)
-- Formation planner crashed when no center point given
+Four bugs between "the AI understands me" and "the drones move." That's the real work — not the AI, not the drones, but the glue.
 
-The gap between "it parses correctly" and "drones actually move" was 4 bugs wide.
+Also built a Command Center dashboard with live telemetry, 2D map, and a command bar. Feels like a real ground station now.
 
-Tomorrow: camera feeds in the dashboard.
+Tomorrow: camera feeds so I can see what the drone sees.
 
 #drones #ai #buildinpublic #nlp #autonomy
 
@@ -59,17 +49,15 @@ Tomorrow: camera feeds in the dashboard.
 **Hook:** Now I can see what the drone sees.
 
 **Post:**
-Day 3: Live camera feed from the drone is now streaming into the Command Center dashboard.
+Day 3: The drone has eyes now.
 
-Pipeline: Gazebo camera → ROS2 image bridge → JPEG encoder → MJPEG stream → browser
+I piped the Gazebo camera through ROS2, encoded frames to JPEG, and streamed them as MJPEG into the Command Center. Click a drone card, see its camera. Click the feed, it goes fullscreen.
 
-Click a drone card to switch cameras. Click the feed to expand.
+Then I tried giving all 3 drones cameras and the simulation dropped to a slideshow. Rendering 3 viewpoints on a laptop CPU is brutal. So for now, drone 1 is the scout with the camera and drones 2-3 are wingmen. The real fix is moving the sim to a GPU instance on AWS — I have $25K in credits waiting.
 
-Hit a wall though — 3 cameras made the simulation choppy. Rendering 3 viewpoints is brutal on CPU. For now, only drone 1 gets a camera. The real fix: moving the whole sim to an AWS GPU instance.
+Also wrote a one-command cleanup script because PX4 filled my disk again. Third time this week. At this point it's a daily ritual.
 
-Also built a one-command cleanup script because PX4 keeps filling my disk. Third time this week.
-
-The demo is coming together: type English → drones fly → see the camera feed. Next: voice input with Whisper so I can talk to the swarm.
+But step back and look at what's working: I type English, drones fly, and I watch through their camera. That's a command-and-control system. Next I'm adding Whisper so I can just talk to them.
 
 #drones #computervision #buildinpublic #robotics #aws
 
@@ -80,24 +68,17 @@ The demo is coming together: type English → drones fly → see the camera feed
 **Hook:** I built a search and rescue village and taught my drones to sweep it.
 
 **Post:**
-Day 4-5: The drones now operate in a custom Search & Rescue village — complete with buildings, roads, vehicles, and simulated survivors.
+Day 4-5: I built an entire SAR village in code — buildings, roads, vehicles, shipping containers, colored ground markers as simulated survivors — and dropped 3 drones into it.
 
-Biggest upgrade: the AI remembers context between commands.
+The breakthrough was giving the AI memory. Before, every command started from zero: "search for survivors" → "Please provide GPS coordinates." Now it remembers context. I can say "search for survivors," then "make it a 50m radius instead," then "send drone 2 to help" and it tracks the whole conversation. Feels like talking to a copilot instead of filling out forms.
 
-Before: "search for survivors" → "What area? Please provide GPS coordinates."
-After: "search for survivors" → "drone 1 sweeping 100m radius" → "make it 50m" → adjusts instantly.
+I spent an hour thinking the camera was mounted backward. The drone was flying forward but showing what's behind it. Dug into the 3D model files, almost rewired the camera orientation — then realized the drone just wasn't rotating to face its direction of travel. One line of trig (atan2 toward the next waypoint) and the camera works perfectly.
 
-I also fixed the drone's camera. It was pointing backward the whole time because the drone wasn't rotating to face its direction of travel. Added yaw-to-waypoint — now the camera always shows what's ahead.
+The funniest bug: my collision avoidance system was sending 30 safety warnings per second to the browser and crashing Chrome. The safety system was the most dangerous thing in the sim.
 
-Other wins:
-- "drone 1 land" now only lands drone 1 (was landing all 3)
-- Clean lawnmower search patterns instead of random arcs
-- "stop" / "hover" actually works now
-- Built the entire village with code — no 3D modeling needed
+Also: per-drone commands actually work now ("drone 1 land" no longer lands all 3), clean lawnmower search sweeps, and a hover/loiter command for holding position.
 
-Honest struggle: collision avoidance was sending 30 messages per second to the browser and crashing Chrome. Classic "the safety system is the danger" moment.
-
-Next: computer vision. YOLO for real-time object detection + Claude Vision for scene analysis. The drone will spot things, not just fly over them.
+Next up: teaching the drone to actually see. YOLO for real-time object detection + Claude Vision for scene understanding. Right now it flies over things. Soon it'll spot them.
 
 **Screenshots to capture:**
 - Command Center with SAR village map + 3 drones flying
