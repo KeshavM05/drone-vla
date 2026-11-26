@@ -1,0 +1,45 @@
+============================================
+  DRONE VLA — SAR VILLAGE + SMART COMMANDS
+  Day 4-5: Search & Rescue World + NLP Upgrade
+  Date: 2026-11-24 to 2026-11-25
+============================================
+
+Stack: PX4 v1.16 SITL + Gazebo Harmonic + ROS2 Humble + Claude Bedrock + FastAPI
+
+What's new (Day 4-5):
+  - Custom SAR village Gazebo world (buildings, vehicles, containers, trees, SAR targets)
+  - Per-drone NL commands: "drone 1 land" only lands drone 1
+  - NLP conversation memory: follow-up commands carry context
+  - NLP knows the village layout: "fly to the warehouse" just works
+  - Lawnmower search pattern: clean, efficient sweeps instead of random arcs
+  - Drone faces direction of travel (camera always points forward)
+  - Loiter/hover command: "stop" freezes drone in place
+  - Collision avoidance log throttling (fixed browser freeze)
+
+SAR Village World (worlds/sar_village.sdf):
+  - Buildings: warehouse, 2 houses, tower
+  - Infrastructure: roads, shipping containers, landing pad
+  - Vehicles: truck, van
+  - SAR targets: orange/red/yellow ground markers
+  - Trees with trunks + canopies
+  - All SDF primitives — no Fuel downloads, fast loading
+
+Key bugs fixed:
+  - PX4_GZ_WORLD not passed to standalone drones (2/3 connected to wrong world)
+  - SDF <world name="..."> must match PX4_GZ_WORLD exactly
+  - CA spam at 30 msg/s flooded WebSocket and crashed browser
+  - Path planner Voronoi cells gave weird shapes for 1-drone searches
+  - NLP lost context between messages (no conversation history)
+  - Search always centered on home, not drone's current position
+
+Command Center features (cumulative):
+  - Fleet status panel (3 drone cards with live telemetry)
+  - 2D NED map (positions, headings, velocity vectors)
+  - Camera feed overlay (MJPEG from drone 1)
+  - NLP command input with conversation context
+  - Per-drone command dispatch
+  - Loiter/hover support
+
+============================================
+  SAR VILLAGE: WORKING (3 drones, buildings, targets)
+============================================

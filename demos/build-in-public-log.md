@@ -75,6 +75,40 @@ The demo is coming together: type English → drones fly → see the camera feed
 
 ---
 
+## Day 4-5 — SAR Village (Nov 24-25)
+
+**Hook:** I built a search and rescue village and taught my drones to sweep it.
+
+**Post:**
+Day 4-5: The drones now operate in a custom Search & Rescue village — complete with buildings, roads, vehicles, and simulated survivors.
+
+Biggest upgrade: the AI remembers context between commands.
+
+Before: "search for survivors" → "What area? Please provide GPS coordinates."
+After: "search for survivors" → "drone 1 sweeping 100m radius" → "make it 50m" → adjusts instantly.
+
+I also fixed the drone's camera. It was pointing backward the whole time because the drone wasn't rotating to face its direction of travel. Added yaw-to-waypoint — now the camera always shows what's ahead.
+
+Other wins:
+- "drone 1 land" now only lands drone 1 (was landing all 3)
+- Clean lawnmower search patterns instead of random arcs
+- "stop" / "hover" actually works now
+- Built the entire village with code — no 3D modeling needed
+
+Honest struggle: collision avoidance was sending 30 messages per second to the browser and crashing Chrome. Classic "the safety system is the danger" moment.
+
+Next: computer vision. YOLO for real-time object detection + Claude Vision for scene analysis. The drone will spot things, not just fly over them.
+
+**Screenshots to capture:**
+- Command Center with SAR village map + 3 drones flying
+- Camera feed showing the village from drone POV (buildings visible)
+- Chat log showing a multi-turn conversation (search → refine → execute)
+- Gazebo view of the village with drone models visible
+
+#drones #ai #searchandrescue #buildinpublic #autonomy #computervision
+
+---
+
 ## Template for future days
 
 **Hook:** One punchy sentence. What happened today in 10 words or less.
